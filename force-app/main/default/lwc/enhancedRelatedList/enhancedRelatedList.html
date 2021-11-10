@@ -1,0 +1,44 @@
+<template>
+    <template if:false={gettingMetadata}>
+        <template if:true={error}>
+            <span class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                {error}
+            </span>
+        </template>
+        <template if:false={error}>
+            <c-datatable 
+                parent-id={recordId}
+                object-data={objectData}
+                custom-title={customTitle}
+                icon-name={iconName}
+                icon-full-url={iconFullURL}
+                allow-create={allowCreate}
+                allow-edit={allowEdit}
+                show-edit-button={showEditButton}
+                allow-delete={allowDelete}
+                show-icon-buttons={showIconButtons}
+                allow-search={allowSearch}
+                editable-fields={editableFields}
+                records-per-page={recordsPerPage}
+                show-pagination-picker={showPaginationPicker}
+                is-aggregate={isAggregate}
+                chart-type={chartType}
+                custom-chart-title={customChartTitle}
+                show-chart={showChart}
+                allow-show-chart={allowShowCharts}
+                hide-records-show-chart={hideRecordsShowChart}
+                chart-colour={chartColour}
+                chart-label-field={chartLabelField}
+                chart-data-point-field={chartDataPointField}
+                edit-field-set-name={editFieldSetName}
+                onselectrowdt={handleSelectRow}
+            >
+            </c-datatable>
+        </template>
+    </template>
+    <template if:true={gettingMetadata}>
+        <lightning-card title="Loading metadata. Please wait..." icon-name="utility:spinner">
+            <lightning-spinner variant="brand" alternative-text="Loading"></lightning-spinner>
+        </lightning-card>
+    </template>
+</template>

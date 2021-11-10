@@ -1,0 +1,102 @@
+.iconButton {
+	cursor: pointer !important;
+	pointer-events: all !important;
+}
+
+.icon-secondary {
+	fill: #9faab5;
+}
+
+.icon-white {
+	fill: #fff;
+}
+
+.apex-firstcol {
+	width: 20%;
+}
+
+.apex-othercol {
+	width: 40%;
+}
+
+.apex-deletecol {
+	width: 1%;
+}
+
+.apex-quarter-width {
+	width: 25%;
+}
+
+.apex-half-width {
+	width: 50%;
+}
+
+.currencysign {
+	position: absolute;
+	top: 4px;
+	left: 10px;
+	color: #999;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	font-size: 16px;
+}
+
+.slds-scope .slds-section__title-action {
+	background: #d9ead3 !important;
+}
+
+.slds-scope .slds-section__title-action:focus {
+	background: #b6d7a8 !important;
+	color: inherit !important;
+	box-shadow: 0 0 3px #274e13 !important;
+}
+
+.slds-scope .slds-section__title-action:hover {
+	background: #b6d7a8 !important;
+	color: inherit !important;
+}
+
+.slds-scope .slds-section__title {
+	color: #66b245 !important;
+	font-weight: bold !important;
+}
+
+.slds-scope .slds-button--brand, .slds-scope .slds-button_brand {
+	background-color: #66b245 !important;
+	border: 1px solid #66b245 !important;
+}
+
+.slds-scope .slds-button--brand:focus, .slds-scope .slds-button--brand:hover, .slds-scope .slds-button_brand:focus, .slds-scope .slds-button_brand:hover {
+	background-color: #5fa640 !important;
+}
+
+.slds-scope .slds-button_brand[disabled], .slds-scope .slds-button_brand:disabled, .slds-scope .slds-button--brand[disabled], .slds-scope .slds-button--brand:disabled {
+	background: rgb(201, 199, 197) !important;
+	border-color: rgb(201, 199, 197) !important;
+	color: rgb(255, 255, 255) !important;
+}
+
+.slds-scope .slds-tabs--default .slds-tabs__item.slds-active a, .slds-scope .slds-tabs_default .slds-tabs__item.slds-active a {
+	border-color: #508c36 !important;
+}
+
+.slds-scope .slds-tabs--default .slds-tabs__item > a:focus, .slds-scope .slds-tabs--default .slds-tabs__item > a:hover, .slds-scope .slds-tabs_default .slds-tabs__item > a:focus, .slds-scope .slds-tabs_default .slds-tabs__item > a:hover {
+	border-color: #508c36 !important;
+}
+
+.errorMsg {
+	color: #c23934;
+}
+
+.slds-button_neutral[disabled] {
+	color: #666 !important;
+}
+
+.label {
+	font-weight: bold !important;
+}
+
+.slds-is-disabled {
+	pointer-events: none;
+}	

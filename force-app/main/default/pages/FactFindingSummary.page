@@ -1,0 +1,22 @@
+<!--
+ - Created by pablomartinez on 25/07/2019.
+ -->
+
+<apex:page id="FactFindingSummary" standardController="Account" showHeader="false" sidebar="false">
+    <style>
+        @media print {
+            @page {
+                margin: 25px;
+                size: A4 landscape;
+            }
+
+            body {
+                -webkit-print-color-adjust: exact;
+                zoom: 0.68;
+            }
+        }
+    </style>
+
+    <apex:slds />
+    <c:factFindingSummary mainAccount="{!Account.Id}" partnerAccount="{!Account.Partner__c}" />
+</apex:page>

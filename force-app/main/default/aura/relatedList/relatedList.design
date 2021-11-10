@@ -1,0 +1,40 @@
+<design:component label="Related List +">  
+    <!-- AURA COMPONENT ATTRIBUTES -->    
+    <design:attribute name="customButton1Label" description="Label for the Custom Button 1" label="Custom Button 1 Label" default="Add"/>
+    <design:attribute name="customButton1Variant" description="Color for the Custom Button 1" label="Color for the Custom Button 1" datasource="base,neutral,brand,destructive,inverse,success" default="brand"/>
+    <design:attribute name="customButton1Flow" description="API Name of the Flow to Execute for Custom Button 1" label="Flow API Name"/>
+    <design:attribute name="customButton1FlowVariableValues" description="Values of variables to send to the Flow for Custom Button 1 (variableName:variableValue. Split by ,). The recordId is always passed as a variable" label="Flow Variables and Values"/>
+    <design:attribute name="mainClass" description="Class to add on top of the table" label="Main CSS Class"/>
+
+    <!-- LWC ATTRIBUTES -->
+    <design:attribute name="objectName" description="Object API Name" label="Object Name" required="true" placeholder="e.g. Contact"/>
+    <design:attribute name="customTitle" description="Custom Lightning Card Title, default title will be set to the Plural Label of the Object" label="Custom Title" placeholder="e.g. All Contacts"/>
+    <design:attribute name="iconName" description="Enter a valid icon name to display from SLDS" label="Icon Name" placeholder="e.g. standard:contact"/>
+    <design:attribute name="iconFullURL" description="Enter a valid icon full URL for the icon" label="Icon Full URL"/>
+    <design:attribute name="relatedField" description="Related Field in the Object that references the parent. If you don't specified a related field, it will use the first one that finds for that parentId." label="Related Field" placeholder="e.g. AccountId"/>
+    <design:attribute name="fieldSetName" description="Fieldset API Name of the object, if not specified will only render the Name Field and required fields" label="Fieldset Name" placeholder="e.g. FieldSetForContact"/>
+    <design:attribute name = "editFieldSetName" description = "Fieldset API Name of the object used for the Edit Row popup form which is displayed upon selection of a single row and clicking of the Edit Row button which will only appear when an Edit Row Fieldset is specified and 'RecordType.DeveloperName' is one of the selected fields." label="Edit Row Fieldset Name" placeholder="e.g. FieldSetForContact, FieldSetForContact_{RecordType}" />
+    <design:attribute name="selectedFields" description="Add a list of comma separated fields to be queried from the object, can be an aggregate SOQL. For aggregate fields add custom label with quote marks and do not include aliases. Cannot be used in conjunction with fieldSetName." label="Selected Fields" placeholder="e.g. Name, FORMAT(MAX(CreatedDate)) ''Max Created Date''"/>
+    <design:attribute name="nonColumnSelectedFields" description="Add a list of comma separated fields to be queried from the object but wont be used in the table columns. This is useful for the dynamic picklist where the picklist values are field values of the object" label="Non-Column Selected Fields" placeholder="e.g. Name" />
+    <design:attribute name="editableFields" description="Add a list of comma separated fields that can be edited. If blank, all fields are editabled" label="Editable Fields" placeholder="e.g. Name, Description__c"/>
+    <design:attribute name="whereCondition" description="Enter a custom WHERE condition here. Note that the WHERE condition will cause new records to be re-evaluated after save. When a custom WHERE condition is set the related Id will not be included and it is up to the user to include it. Merge fields are allowed as long as they start with '{{ ' and end with ' }}'." label="WHERE Condition" placeholder="e.g. AccountId = {{ Id }} OR Account.Type = {{ Account.Type }}"/>
+    <design:attribute name="groupBy" description="Group by columns, any aggregate query will not allow creating, updating or deleting records. Cannot be used in conjunction with fieldSetName." label="Group By" placeholder="e.g. Name"/>
+    <design:attribute name="orderBy" description="Order by for the default order of the results in the table. If you don't specified an order by, it will be ordered by the Name Field of the object." label="Order By" placeholder="e.g. Name ASC"/>
+    <design:attribute name="recordLimit" description="Limit the amount of records shown" label="Record Limit" min="1" max="10000" default="10000" required="true"/>
+    <design:attribute name="allowEdit" description="Allow editing fields that are editable. Cannot be used in conjunction with aggregate queries." label="Allow Edit" default="true"/>
+    <design:attribute name="allowCreate" description="Allow creating new rows. Cannot be used in conjunction with aggregate queries." label="Allow Create (Not working properly)" default="false" />
+    <design:attribute name="showEditButton" description="Show an edit button instead of making rows editable by default. Cannot be used in conjunction with aggregate queries." label="Show Edit Button" default="true"/>
+    <design:attribute name="allowDelete" description="Allow deleting records. Cannot be used in conjunction with aggregate queries." label="Allow Delete" default="true"/>
+    <design:attribute name="showIconButtons" description="Show icon buttons instead of text buttons." label="Show Icon Buttons" default="true"/>
+    <design:attribute name="allowSearch" description="Allow searching or filtering the returned record set." label="Allow search" default="true"/>
+    <design:attribute name="recordsPerPage" description="Amount of records to be displayed per page." label="Records Per Page" default="5"/>
+    <design:attribute name="showPaginationPicker" description="Show dropdown of common records per page options, above number will be selected by default." label="Show Pagination Picker" default="true"/>
+    <design:attribute name="chartType" description="Type of chart to render, visit chartjs.org for more information on each chart type." label="Chart Type" default="bar" datasource="line,bar,radar,doughnut,pie,polarArea"/>
+    <design:attribute name="customChartTitle" description="Custom Chart Title, default title will be set to the Plural Label of the Object appended wih 'Chart'" label="Custom Chart Title" placeholder="e.g. Contacts Chart"/>
+    <design:attribute name="showChart" description="Show a chart for the records" label="Show Chart"/>
+    <design:attribute name="allowShowCharts" description="Show a button to toggle the chart display" label="Allow show chart toggle"/>
+    <design:attribute name="hideRecordsShowChart" description="Hide the records and record related buttons (excluding refresh) to load charts faster" label="Hide Records when showing the Chart"/>
+    <design:attribute name="chartColour" description="Custom colour used for border and background colours on charts. Random colours will be added when the chart requires it, like for a pie chart." label="Chart Colour" default="red" datasource="black,red,lime,blue,yellow,cyan,magenta,silver,gray,maroon,olive,green,purple,teal,navy"/>
+    <design:attribute name="chartLabelField" description="Field from the record to use when building the labels for the chart" label="Chart Label Field"/>
+    <design:attribute name="chartDataPointField" description="Field from the record to use when building the data points for the chart" label="Chart Data Point Field"/>
+</design:component>

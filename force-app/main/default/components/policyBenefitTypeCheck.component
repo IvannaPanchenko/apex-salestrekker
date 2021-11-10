@@ -1,0 +1,32 @@
+<!--
+ - Created by pablomartinez on 27/09/2019.
+ -->
+
+<apex:component layout="none">
+    <apex:attribute name="label" type="String" required="true" description="Label" />
+    <apex:attribute name="iconURL" type="String" description="Icon URL" required="true" />
+    <apex:attribute name="check" type="Boolean" description="If we need to show the check or uncheck icon" />
+    <apex:attribute name="elementId" type="String" description="Id to identify the elements" />
+    <apex:attribute name="containerIconClass" type="String" description="Class to add to the container of the Icon" />
+
+    <div class="slds-size--2-of-6 slds-media slds-no-space slds-grow">
+        <span class="slds-avatar {!containerIconClass}">
+            <c:icon elementId="{!elementId}Icon" classes="slds-m-right--small icon" path="{!iconURL}" type="uxpin"/>
+        </span>
+        <div class="slds-media__body">
+            <h1 class="slds-text-heading_small slds-m-right_small slds-align-middle slds-truncate" title="{!label}">{!label}</h1>
+        </div>
+    </div>
+    <div class="slds-size--1-of-6">
+        <apex:outputPanel rendered="{!check}" layout="none">
+             <span class="slds-avatar slds-avatar_medium">
+                <c:icon elementId="check{!elementId}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+             </span>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!!check}" layout="none">
+             <span class="slds-avatar slds-avatar_medium">
+                <c:icon elementId="unCheck{!elementId}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/fontawesome/circle.svg')}" type="fontawesome"/>
+             </span>
+        </apex:outputPanel>
+    </div>
+</apex:component>

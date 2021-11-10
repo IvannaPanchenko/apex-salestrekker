@@ -1,0 +1,67 @@
+.data-template {
+    width: 100px;
+    height: 10px;
+    background: lightgray;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+}
+
+.longValContainer{
+
+border: 0px; 
+overflow: hidden;
+resize: none;
+}
+
+.longValContainer:active{
+
+border: 1px; 
+overflow: scroll;
+resize: none;
+}
+
+
+.slds-dropdown{
+
+display: inline-block; 
+position: relative;
+}
+
+.slds-listbox__option{
+display: inline-block; 
+position: relative;
+}
+
+.THIS .slds-textarea {
+    resize: horizontal;
+}
+
+textarea {
+    resize: horizontal;
+}
+
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 100%;
+  background-color: rgb(133, 133, 133);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 3px 0;
+
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  transition-delay: 2.5s;
+}

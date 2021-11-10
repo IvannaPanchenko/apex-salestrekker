@@ -1,0 +1,31 @@
+<design:component label="Picklist As Options +">  
+    <!-- LWC ATTRIBUTES -->
+    <design:attribute name="fieldNames" description="Field API Names of the fields to render. Could be more than one field split by ," label="Field Names" required="true" placeholder="e.g. Kiwisaver_Providers__c,Services__c"/>
+    <design:attribute name="sectionLabels" description="Labels to show in each section/field. Could be more than one labels split by , (it should be in the same order of the fieldNames string). If null then the Field Labels will be displayed" label="Section Labels" placeholder="e.g. Kiwisaver,Services"/>
+    <design:attribute name="defaultChecked" description="Which values should be checked by default on new Records. Set each field check split by , (it should be in the same order of the fieldNames string) and the value separated by a :. If null everything will be unchecked. Use the 'all' word for checking all" label="Checked by Default" placeholder="e.g. Kiwisaver_Providers__c:all,Services__c:Option1:Option2"/>
+    <design:attribute name="saveEnabled" description="If the component has the save and cancel button enabled" label="Is Save Enabled?" />
+    <design:attribute name="saveButtonLabel" description="Label for the Save button" label="Save Button Label" default="Save"/>
+    <design:attribute name="saveButtonVariant" description="Colour for the Save button" label="Colour for the Save button" default="brand" dataSource="base,neutral,brand,destructive,inverse,success"/>
+    <design:attribute name="resetEnabled" description="If the component has the reset button enabled" label="Is Reset Enabled?" />
+    <design:attribute name="allowSelectAll" description="If the component allow the select all option for Multi Pick Lists" label="Is Select All Enabled?" />
+    <design:attribute name="selectAllLabel" description="Label to use next to the Select All checkbox, if enabled." label="Select All Label" />
+    <design:attribute name="validateLastModifiedDate" description="Should the save validate the last modified date of the record?" label="Validate Last Modified Date?" />
+    <design:attribute name="extraFieldName" description="Field API Name to show next to the buttons. E.g. use it for add a checkbox for I agree..." label="Extra Field Name" />
+    <design:attribute name="extraFieldLabel" description="Label to show next to the extra field. If null then the Field Label will be displayed" label="Extra Field Label" placeholder="e.g. I {{Opportunity.Owner.Name}} agree..."/>
+
+    <!-- FLOW ATTRIBUTES -->
+    <design:attribute name="showFlowButton" description="Show Flow button?" label="Show Flow button?"/>
+    <design:attribute name="flowAPIName" description="API Name of the Flow to Execute for the Save button" label="Flow API Name"/>
+    <design:attribute name="flowVariableValues" description="Values of variables to send to the Flow for the Save button (variableName:variableValue. Split by ,). The recordId is always passed as a variable" label="Flow Variables and Values"/>
+    <design:attribute name="flowButtonLabel" description="Label for the Flow button" label="Flow Button Label" default="Open Flow"/>
+    <design:attribute name="flowButtonVariant" description="Colour for the Flow button" label="Colour for the Flow button" dataSource="base,neutral,brand,destructive,inverse,success" default="neutral"/>
+
+    <!-- CONGA BUTTON -->
+    <design:attribute name="showCongaButton" description="Show Conga button?" label="Show Conga Button?"/>
+    <design:attribute name="congaButtonLabel" description="Label of the Conga Button to show" label="Conga Button Label" placeholder="e.g. Send Document" />
+    <design:attribute name="congaButtonVariant" description="Variant of the Conga Button (possible values are base, neutral, brand, destructive or success)" placeholder="e.g. brand" label="Conga Button Variant" />
+    <design:attribute name="congaTemplates" description="Conga Template of the button" label="Conga Templates" />
+    <design:attribute name="congaQueries" description="Conga Queries of the button" label="Conga Queries" />
+    <design:attribute name="congaAttributes" description="Other Attributes for Conga" label="Attributes for Conga" placeholder="e.g. &amp;DefaultPDF=1&amp;DS7=0&amp;DS7Preview=1" />
+
+</design:component>

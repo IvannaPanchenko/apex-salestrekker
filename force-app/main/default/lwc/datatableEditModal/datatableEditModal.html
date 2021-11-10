@@ -1,0 +1,36 @@
+<template>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small"
+        aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" >
+        
+        <div class="slds-modal__container">
+            
+            <div class="slds-modal__content slds-p-around_small body" id="modal-content-id-1" style="overflow: visible; overflow-y: visible;">
+                <div class="slds-grid slds-gutters search">
+                    <div class="slds-col slds-size_1-of-1">
+
+                        <lightning-record-edit-form id={formId} record-id={recordid} object-api-name={objectname} onerror={handleError} onsuccess={handleSuccess}>
+
+                            <template for:each={editMenuFields} for:item="fieldName">
+
+                                <lightning-input-field field-name={fieldName} key={fieldName}>
+                                </lightning-input-field>
+
+                                <br key={fieldName} />
+
+                            </template> 
+                            
+                            
+                        <lightning-button-group class="slds-m-top_small slds-align_absolute-center"> 
+                        <lightning-button  variant="brand" type="submit" name="update" label="Update"></lightning-button>
+                        <lightning-button cname="cancel" label="Cancel" onclick={closeModal}></lightning-button>
+                        </lightning-button-group>
+                        </lightning-record-edit-form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open" style="position: fixed;"></div>
+</template>

@@ -1,0 +1,121 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" controller="LookupRollupCalculator">
+
+    <!-- AURA COMPONENT PROPERTIES -->
+    <aura:attribute name="customButton1Label" type="String" />
+    <aura:attribute name="customButton1Variant" type="String" />
+    <aura:attribute name="customButton1Flow" type="String" />
+    <aura:attribute name="customButton1FlowVariableValues" type="String" />
+    <aura:attribute name="mainClass" type="String" default=""/>
+    <aura:attribute name="isOpen" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="flowError" type="Boolean" default="false" access="private"/>
+
+    <!-- LWC ATTRIBUTES -->
+    <aura:attribute name="objectName" type="String" />
+    <aura:attribute name="customTitle" type="String"/>
+    <aura:attribute name="iconName" type="String"/>
+    <aura:attribute name="iconFullURL" type="String"/>
+    <aura:attribute name="relatedField" type="String"/>
+    <aura:attribute name="fieldSetName" type="String"/>
+    <aura:attribute name="selectedFields" type="String"/>
+    <aura:attribute name="nonColumnSelectedFields" type="String"/>
+    <aura:attribute name="editableFields" type="String"/>
+    <aura:attribute name="whereCondition" type="String"/>
+    <aura:attribute name="groupBy" type="String"/>
+    <aura:attribute name="orderBy" type="String"/>
+    <aura:attribute name="recordLimit" type="Integer"/>
+    <aura:attribute name="allowEdit" type="Boolean"/>
+    <aura:attribute name="showEditButton" type="Boolean"/>
+    <aura:attribute name="allowDelete" type="Boolean"/>
+    <aura:attribute name="showIconButtons" type="Boolean"/>
+    <aura:attribute name="allowSearch" type="Boolean"/>
+    <aura:attribute name="recordsPerPage" type="Integer"/>
+    <aura:attribute name="showPaginationPicker" type="Boolean"/>
+    <aura:attribute name="chartType" type="String"/>
+    <aura:attribute name="customChartTitle" type="String"/>
+    <aura:attribute name="showChart" type="Boolean"/>
+    <aura:attribute name="allowShowCharts" type="Boolean"/>
+    <aura:attribute name="hideRecordsShowChart" type="Boolean"/>
+    <aura:attribute name="chartColour" type="String"/>
+    <aura:attribute name="chartLabelField" type="String"/>
+    <aura:attribute name="chartDataPointField" type="String"/>
+    <aura:attribute name="allowCreate" type="Boolean" default="false"/>
+    <aura:attribute name="editFieldSetName" type="String"/>
+
+    <lightning:workspaceAPI aura:id="workspace" />
+    <aura:method name="refMethod" action="{!c.refreshFocusedTab}" access="global" />
+
+    <div class="{!v.mainClass}">
+        <c:enhancedRelatedList aura:id="enhancedRelatedList"
+            recordId="{!v.recordId}"
+            objectName="{!v.objectName}"
+            customTitle="{!v.customTitle}"
+            iconName="{!v.iconName}"
+            iconFullURL="{!v.iconFullURL}"
+            relatedField="{!v.relatedField}"
+            fieldSetName="{!v.fieldSetName}"
+            selectedFields="{!v.selectedFields}"
+            nonColumnSelectedFields = "{!v.nonColumnSelectedFields}"
+            editableFields="{!v.editableFields}"
+            whereCondition="{!v.whereCondition}"
+            groupBy="{!v.groupBy}"
+            orderBy="{!v.orderBy}"
+            recordLimit="{!v.recordLimit}"
+            allowCreate="{!v.allowCreate}"
+            allowEdit="{!v.allowEdit}"
+            showEditButton="{!v.showEditButton}"
+            allowDelete="{!v.allowDelete}"
+            showIconButtons="{!v.showIconButtons}"
+            allowSearch="{!v.allowSearch}"
+            recordsPerPage="{!v.recordsPerPage}"
+            showPaginationPicker="{!v.showPaginationPicker}"
+            chartType="{!v.chartType}"
+            customChartTitle="{!v.customChartTitle}"
+            showChart="{!v.showChart}"
+            allowShowCharts="{!v.allowShowCharts}"
+            hideRecordsShowChart="{!v.hideRecordsShowChart}"
+            chartColour="{!v.chartColour}"
+            chartLabelField="{!v.chartLabelField}"
+            chartDataPointField="{!v.chartDataPointField}"
+            editFieldSetName="{!v.editFieldSetName}"
+        />
+        <!--<lightning:button aura:id="refreshTabBtn" label="Refresh Focused Tab" onclick="{!c.refreshFocusedTab}" /> -->
+    </div>
+
+    <aura:if isTrue="{!v.isOpen}">
+        <div>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" style="position: fixed;">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header slds-modal__header_empty">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick="{!c.closeFlowModal}">
+                            <lightning:icon iconName="utility:close"
+                                            alternativeText="close"
+                                            variant="inverse"
+                                            size="small" />
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning:flow aura:id="callFlow" onstatuschange="{!c.statusChange}" />
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open" style="position: fixed;"></div>
+        </div>    
+    </aura:if>
+    <aura:if isTrue="{!v.allowEdit}">
+        <div class="rightAlign">
+            <aura:if isTrue="{!!v.showIconButtons}">
+                <lightning:button variant="{!v.customButton1Variant}" class="slds-button" label="{!v.customButton1Label}" onclick="{!c.handleAdd}" />
+            </aura:if>
+            <aura:if isTrue="{!v.showIconButtons}">
+                <lightning:buttonIcon
+                        alternativeText="{!v.customButton1Label}"
+                        iconName="utility:add"
+                        class="slds-button_icon"
+                        variant="{!v.customButton1Variant}"
+                        onclick="{!c.handleAdd}">
+                </lightning:buttonIcon>
+            </aura:if>
+        </div>
+    </aura:if>
+</aura:component>

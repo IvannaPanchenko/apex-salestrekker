@@ -1,0 +1,18 @@
+<!--
+ - Created by pablomartinez on 7/09/2019.
+ -->
+
+<design:component label="Flow Footer +">
+    <design:attribute name="canPause" description="Show Pause Button" label="Can Pause?" default="false" />
+    <design:attribute name="labelPause" description="Label for the Pause Button" label="Label Pause Button" placeholder="Default: Pause" />
+    <design:attribute name="canBack" description="Show Back/Previous Button" label="Can Back/Previous?" default="false" />
+    <design:attribute name="labelBack" description="Label for the Back/Previous Button" label="Label Back/Previous Button" placeholder="Default: Previous" />
+    <design:attribute name="canNext" description="Show Next Button" label="Can Next?" default="false" />
+    <design:attribute name="labelNext" description="Label for the Next Button" label="Label Next Button" placeholder="Default: Next" />
+    <design:attribute name="canFinish" description="Show Finish/Done/Save Button" label="Can Finish/Done/Save?" default="false" />
+    <design:attribute name="labelFinish" description="Label for the Finish/Done/Save Button" label="Label Finish/Done/Save Button" placeholder="Default: Finish" />
+    <design:attribute name="canSaveAndNew" description="Show Save &amp; New Button" label="Can Save &amp; New?" default="false" />
+    <design:attribute name="labelSaveAndNew" description="Label for the Save &amp; New Button" label="Label Save &amp; New Button" placeholder="Default: Save and New" />
+
+    <design:attribute name="saveAndNew" description="Variable to set if saving and new" label="Save &amp; New Variable Output" />
+</design:component>

@@ -1,0 +1,1787 @@
+<!--
+ - Created by pablomartinez on 25/07/2019.
+ -->
+
+<apex:component id="factFindingSummary" controller="FactFindingSummaryController">
+    <apex:outputPanel rendered="{!OR(ISBLANK(factFind),ISNULL(factFind))}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+        <link href="{!$Resource.Akina + '/css/base.css'}" rel="stylesheet" type="text/css"/>
+    </apex:outputPanel>
+
+    <style>
+        .currencyTotals {
+            color: #43749C;
+        }
+
+        .pageBreakInsideAvoid {
+            page-break-inside: avoid;
+        }
+
+        .pageBreakBeforeAlways {
+            page-break-before: always;
+        }
+
+       /* .avatar-custom-x-small {
+            height: 1.5rem !important;
+            width: 1.5rem !important;
+        }*/
+
+        .avatar-custom-small {
+            height: 1.8rem !important;
+            width: 1.8rem !important;
+        }
+
+        .printingOptions .slds-modal.slds-modal_small.slds-fade-in-open {
+            bottom: unset;
+        }
+
+        a.no-color {
+            color: unset;
+        }
+
+        a.no-color:hover {
+            color: unset;
+        }
+
+        .check-benefit img {
+            width: 2rem;
+            height: 1.4rem;
+        }
+    </style>
+    <apex:attribute name="mainAccount" type="Id" required="true" description="Main account Id" assignTo="{!mainAccountId}" />
+    <apex:attribute name="partnerAccount" type="Id" description="Partner Account Id" assignTo="{!partnerAccountId}" />
+    <apex:attribute name="factFind" type="Fact_Find__c" description="Parameter that specify if the summary is used in the fact find page or not" assignTo="{!factFindAttr}" />
+    <apex:attribute name="accounts" type="Account[]" description="List of accounts" assignTo="{!accountsAttr}" />
+    <apex:attribute name="allFamilyMembers" type="Object[]" description="List of all dependants" assignTo="{!familyMembersAttr}" />
+    <apex:attribute name="legalEntities" type="Account[]" description="List of Legal Entities" assignTo="{!legalEntitiesAttr}" />
+    <apex:attribute name="goals" type="Goal__c[]" description="List of Goals" assignTo="{!goalsAttr}" />
+    <apex:attribute name="assets" type="Object[]" description="List of assets" assignTo="{!assetsAttr}" />
+    <apex:attribute name="liabilities" type="Object[]" description="List of liabilities" assignTo="{!liabilitiesAttr}" />
+    <apex:attribute name="incomesExpenses" type="Object[]" description="List of income and expenses" assignTo="{!incomesExpensesAttr}" />
+
+    <!-- PRINTABLE BUTTON -->
+    <apex:outputPanel layout="none" rendered="{!ISNULL(printOptions)}">
+        <div class="slds-align--absolute-center">
+            <button class="slds-button slds-button_brand active-btn" title="Print" onclick="openDialog('printingOptions', true);return false;">
+                Print
+            </button>
+        </div>
+    </apex:outputPanel>
+
+    <!-- HEADER -->
+    <apex:outputPanel rendered="{!AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'he'))}" layout="none">
+        <div class="slds-form-element__row slds-grid slds-size--1-of-1 slds-wrap">
+            <div class="slds-size--1-of-3">
+                <apex:image url="{!URLFOR($Resource.Akina, 'images/logo.png')}" width="80" />
+            </div>
+            <div class="slds-align-middle slds-page-header__title slds-size--1-of-3 slds-text-align--center">
+                Apex Advice Group
+            </div>
+            <div class="slds-align-bottom slds-p-right--xx-large slds-size--1-of-3 slds-text-align--right">
+                <span class="slds-text-title_bold">Printed:</span>
+                <apex:outputText value=" {!TODAY()}" />
+            </div>
+        </div>
+    </apex:outputPanel>
+
+    <!-- SUMMARY -->
+    <div class="slds-form--compound slds-is-open slds-m-bottom--none slds-section">
+        <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),OR(CONTAINS(printOptions, 'pd'),OR(CONTAINS(printOptions, 'ps'),OR(CONTAINS(printOptions, 'nw'),OR(CONTAINS(printOptions, 'di'),OR(CONTAINS(printOptions, 'csa'),OR(CONTAINS(printOptions, 'gl'),OR(CONTAINS(printOptions, 'nac'),CONTAINS(printOptions, 'ics'))))))))))}" layout="none">
+            <h3 class="slds-section__title">
+                <span class="slds-button slds-section__title-action" title="{!IF(CONTAINS(printOptions, 'print'),'Policy Schedule','Summary')}">{!IF(CONTAINS(printOptions, 'print'),'Policy Schedule','Summary')}</span>
+            </h3>
+        </apex:outputPanel>
+        <div class="slds-p-top--none slds-section__content">
+            <div class="slds-grid slds-wrap slds-grid_align-center">
+                <div class="slds-form-element__row slds-grid slds-wrap slds-size--1-of-1">
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'pd')))}" layout="none">
+                        <div class="slds-col slds-size--1-of-1 slds-p-around--x-small">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-form-element">
+                                <!-- Personal Details -->
+                                <div class="slds-media slds-no-space slds-grow">
+                                    <span class="slds-avatar slds-avatar_medium">
+                                        <c:icon elementId="personalDetailsIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/user-regular.svg')}" type="uxpin"/>
+                                    </span>
+                                    <div class="slds-media__body">
+                                        <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate" title="Personal Details">Personal Details</h1>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-form-element__row slds-size--1-of-1">
+                                        <div class="label slds-size--1-of-3">Name</div>
+                                        <div class="label slds-align--absolute-center slds-size--1-of-7">Age</div>
+                                        <div class="label slds-size--1-of-2">Employment</div>
+                                    </div>
+                                    <apex:repeat value="{!theAccounts}" var="acc">
+                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                            <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                <apex:outputLink styleClass="slds-size--1-of-3" value="/{!acc.account.Id}">{!acc.account.Client_Preferred_Name__c}</apex:outputLink>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                <apex:outputText styleClass="slds-size--1-of-3" value="{!acc.account.Client_Preferred_Name__c}" />
+                                            </apex:outputPanel>
+                                            <apex:outputText styleClass="slds-align--absolute-center slds-size--1-of-7" value="{!acc.account.Age__pc}" />
+                                            <apex:outputText styleClass="slds-size--1-of-2" value="{!acc.employment}"/>
+                                        </div>
+                                    </apex:repeat>
+                                </div>
+
+                                <!-- DEPENDANTS -->
+                                <apex:outputPanel styleClass="slds-grid slds-m-top--x-small slds-wrap slds-border--top">
+                                    <div class="slds-m-top--x-small slds-m-bottom--small slds-text-heading--small slds-size--1-of-1">Dependants</div>
+                                    <apex:outputPanel rendered="{!!isDependantEmpty}" layout="none">
+                                        <div class="slds-grid slds-m-bottom--small slds-wrap slds-size--1-of-1">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="label slds-size--1-of-3">Name</div>
+                                                <div class="label slds-align--absolute-center slds-size--1-of-7">Age</div>
+                                                <div class="label slds-size--1-of-2">Relationship</div>
+                                            </div>
+                                            <apex:repeat value="{!theDependants}" var="fm">
+                                                <div class="slds-form-element__row slds-size--1-of-1">
+                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputLink styleClass="slds-size--1-of-3" value="/{!fm.account.Id}">{!fm.account.Client_Preferred_Name__c}</apex:outputLink>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputText styleClass="slds-size--1-of-3" value="{!fm.account.Client_Preferred_Name__c}"/>
+                                                    </apex:outputPanel>
+                                                    <apex:outputText styleClass="slds-align--absolute-center slds-size--1-of-7"  value="{0, number, integer}">
+                                                        <apex:param value="{!fm.account.Age__pc}" />
+                                                    </apex:outputText>
+                                                    <apex:outputText styleClass="slds-size--1-of-2" value="{!fm.relationship.Relationship_Type__c}"/>
+                                                </div>
+                                            </apex:repeat>
+                                        </div>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!isDependantEmpty}" styleClass="slds-m-bottom--medium">
+                                        <apex:outputText rendered="{!theFactFind.No_Dependents__c}" value="You have no dependants" />
+                                        <apex:outputText rendered="{!theFactFind.Chosen_Not_to_Provide_Dependents_Details__c}" value="You chose not to provide these details" />
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+
+                                <!-- OTHER FAMILY -->
+                                <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!!isOtherFamilyEmpty}">
+                                    <div class="slds-m-bottom--small slds-text-heading--small slds-size--1-of-1">Other Family</div>
+                                    <div class="slds-grid slds-m-bottom--small slds-wrap slds-size--1-of-1">
+                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                            <div class="label slds-size--1-of-3">Name</div>
+                                            <div class="label slds-align--absolute-center slds-size--1-of-7">Age</div>
+                                            <div class="label slds-size--1-of-2">Relationship</div>
+                                        </div>
+                                        <apex:repeat value="{!theOtherFamily}" var="fm">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                    <apex:outputLink styleClass="slds-size--1-of-3" value="/{!fm.account.Id}">{!fm.account.Client_Preferred_Name__c}</apex:outputLink>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="{!fm.account.Client_Preferred_Name__c}"/>
+                                                </apex:outputPanel>
+                                                <apex:outputText styleClass="slds-align--absolute-center slds-size--1-of-7"  value="{0, number, integer}">
+                                                    <apex:param value="{!fm.account.Age__pc}" />
+                                                </apex:outputText>
+                                                <apex:outputText styleClass="slds-size--1-of-2" value="{!fm.relationship.Relationship_Type__c}"/>
+                                            </div>
+                                        </apex:repeat>
+                                    </div>
+                                </apex:outputPanel>
+
+                                <!-- LEGAL ENTITIES -->
+                                <apex:outputPanel styleClass="slds-grid slds-wrap">
+                                    <div class="slds-m-bottom--small slds-text-heading--small">Businesses and Trusts</div>
+                                    <div class="slds-form-element__row slds-size--1-of-1 slds-wrap">
+                                        <apex:outputPanel rendered="{!!isLegalEntitiesEmpty}" layout="none">
+                                            <apex:repeat value="{!theLegalEntities}" var="legKey">
+                                                <div class="slds-p-bottom--small slds-size--1-of-3">
+                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputLink value="/{!theLegalEntities[legKey].Id}">{!theLegalEntities[legKey].Name}</apex:outputLink>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputText value="{!theLegalEntities[legKey].Name}"/>
+                                                    </apex:outputPanel>
+                                                </div>
+                                            </apex:repeat>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!isLegalEntitiesEmpty}">
+                                            <apex:outputText rendered="{!theFactFind.No_Other_Entities__c}" value="You have no Other Entities" />
+                                            <apex:outputText rendered="{!theFactFind.Chosen_Not_to_Provide_Other_Entities__c}" value="You chose not to provide these details" />
+                                            <apex:outputText rendered="{!AND(!theFactFind.No_Other_Entities__c, !theFactFind.Chosen_Not_to_Provide_Other_Entities__c)}" value="We haven't captured any legal entity yet." />
+                                        </apex:outputPanel>
+                                    </div>
+                                </apex:outputPanel>
+                            </fieldset>
+                        </div>
+                    </apex:outputPanel>
+
+                    <!--<apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'csa')))}" layout="none">
+                        <fieldset class="slds-box slds-theme_default slds-container slds-m-top&#45;&#45;x-small">
+                            &lt;!&ndash; Client Service Areas &ndash;&gt;
+                            <div class="slds-media slds-no-space slds-grow">
+                                <span class="slds-avatar slds-avatar_medium">
+                                    <c:icon elementId="ClientServiceAreaIcon" classes="slds-m-right&#45;&#45;small icon" path="{!URLFOR($Resource.Akina, 'icons/uxpin/star-regular.svg')}" type="uxpin"/>
+                                </span>
+                                <div class="slds-media__body">
+                                    <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate" title="Your Financial Plans">Your Financial Plans</h1>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row slds-m-left&#45;&#45;medium slds-size&#45;&#45;1-of-1">
+                                <span class="slds-size&#45;&#45;2-of-6">Fire and General Insurance</span>
+                                <div class="slds-size&#45;&#45;1-of-6">
+                                    <span class="slds-avatar slds-avatar_medium avatar-custom-x-small">
+                                        <apex:outputText value="{!mapAccountsByIds[mainAccountId].Fire_and_General__c}" escape="false"/>
+                                    </span>
+                                </div>
+                                <span class="slds-size&#45;&#45;2-of-6">Mortgage</span>
+                                <div class="slds-size&#45;&#45;1-of-6">
+                                    <span class="slds-avatar slds-avatar_medium avatar-custom-x-small">
+                                        <apex:outputText value="{!mapAccountsByIds[mainAccountId].Mortgage__c}" escape="false"/>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row slds-m-left&#45;&#45;medium slds-size&#45;&#45;1-of-1">
+                                <span class="slds-size&#45;&#45;2-of-6">Income Protection</span>
+                                <div class="slds-size&#45;&#45;1-of-6">
+                                    <span class="slds-avatar slds-avatar_medium avatar-custom-x-small">
+                                        <apex:outputText value="{!mapAccountsByIds[mainAccountId].Income__c}" escape="false"/>
+                                    </span>
+                                </div>
+                                <span class="slds-size&#45;&#45;2-of-6">Retirement Plans</span>
+                                <div class="slds-size&#45;&#45;1-of-6">
+                                    <span class="slds-avatar slds-avatar_medium avatar-custom-x-small">
+                                        <apex:outputText value="{!mapAccountsByIds[mainAccountId].Retirement__c}" escape="false"/>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row slds-m-left&#45;&#45;medium slds-size&#45;&#45;1-of-1">
+                                <span class="slds-size&#45;&#45;2-of-6">Life Event Insurance</span>
+                                <div class="slds-size&#45;&#45;1-of-6">
+                                    <span class="slds-avatar slds-avatar_medium avatar-custom-x-small">
+                                        <apex:outputText value="{!mapAccountsByIds[mainAccountId].Life_Event__c}" escape="false"/>
+                                    </span>
+                                </div>
+                                <span class="slds-size&#45;&#45;2-of-6">Investment and Savings</span>
+                                <div class="slds-size&#45;&#45;1-of-6">
+                                    <span class="slds-avatar slds-avatar_medium avatar-custom-x-small">
+                                        <apex:outputText value="{!mapAccountsByIds[mainAccountId].Investment_Savings__c}" escape="false"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </apex:outputPanel>-->
+                </div>
+
+                <div class="slds-form-element__row slds-grid slds-wrap slds-size--1-of-1 slds-p-around--x-small">
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'nwdi')))}" layout="none">
+                        <fieldset class="slds-box slds-container slds-size--1-of-1 slds-theme_default">
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-col slds-size--1-of-2">
+                                    <!-- Net Worth -->
+                                    <div class="slds-media slds-no-space slds-grow">
+                                                <span class="slds-avatar slds-avatar_medium">
+                                                    <c:icon elementId="NetWorthIcon" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/uxpin/achievement-regular.svg')}" type="uxpin"/>
+                                                </span>
+                                        <div class="slds-media__body">
+                                            <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate" title="Net Worth">Net Worth</h1>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element__row slds-size--1-of-1">
+                                        <div class="slds-align--absolute-center slds-size--1-of-3 slds-text-heading--medium">Net Worth</div>
+                                        <div class="label slds-size--1-of-2 slds-text-heading--medium currencyTotals">
+                                            <apex:outputText rendered="{!OR(!isAssetsEmpty, !isLiabilitiesEmpty)}" value="${0, Number, ###,###,###}">
+                                                <apex:param value="{!netWorth}" />
+                                            </apex:outputText>
+                                            <apex:outputText rendered="{!AND(isAssetsEmpty, isLiabilitiesEmpty)}" value="Unknown" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size--1-of-2">
+                                    <!-- Disposable Income -->
+                                    <div class="slds-media slds-no-space slds-grow">
+                                                <span class="slds-avatar slds-avatar_medium">
+                                                    <c:icon elementId="DisposableIncomeIcon" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/uxpin/hand-holding-usd.svg')}" type="uxpin"/>
+                                                </span>
+                                        <div class="slds-media__body">
+                                            <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate" title="Disposable Income">Disposable Income</h1>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element__row slds-size--1-of-1">
+                                        <div class="slds-align--absolute-center slds-size--1-of-3 slds-text-heading--medium">Disposable Income</div>
+                                        <div class="label slds-size--1-of-2 slds-text-heading--medium currencyTotals">
+                                            <apex:outputText rendered="{!AND(!isIncomesEmpty, !isExpensesEmpty)}" value="${0, Number, ###,###,###}">
+                                                <apex:param value="{!disposableIncome}" />
+                                            </apex:outputText>
+                                            <apex:outputText rendered="{!OR(isIncomesEmpty, isExpensesEmpty)}" value="Unknown" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </apex:outputPanel>
+                </div>
+
+                <div class="slds-form-element__row slds-size--1-of-1">
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'gl')))}" layout="none">
+                        <div class="slds-col slds-size--1-of-1 slds-p-around--x-small slds-p-top--none">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-form-element">
+                                <!-- Goals -->
+                                <div class="slds-media slds-no-space slds-grow">
+                                    <span class="slds-avatar slds-avatar_medium">
+                                        <c:icon elementId="GoalsIcon" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/uxpin/crosshairs.svg')}" type="uxpin"/>
+                                    </span>
+                                    <div class="slds-media__body">
+                                        <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate" title="Goals">Goals</h1>
+                                    </div>
+                                </div>
+                                <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!theGoals.size > 0}">
+                                    <div class="slds-form-element__row slds-size--1-of-1">
+                                        <div class="label slds-size--1-of-4">Goal Type</div>
+                                        <div class="label slds-size--1-of-2">Goals</div>
+                                    </div>
+                                    <apex:repeat value="{!theGoals}" var="goal">
+                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                            <apex:outputText styleClass="slds-size--1-of-4" value="{!goal.Name}" />
+                                            <apex:outputText styleClass="slds-size--1-of-2" value="{!goal.Comments__c}" />
+                                        </div>
+                                    </apex:repeat>
+                                </apex:outputPanel>
+                                <apex:outputText styleClass="slds-size--1-of-1 slds-align--absolute-center" rendered="{!theGoals.size == 0}" value="We haven't captured any goals yet." />
+                            </fieldset>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+                <!-- CHECK LISTS -->
+                <div class="slds-form-element__row slds-size--1-of-1">
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'ps')))}" layout="none">
+                        <div class="slds-grid slds-wrap slds-grid_align-center">
+                            <div class="slds-col slds-large-size--1-of-2 slds-medium-size--1-of-2 slds-p-around--x-small slds-p-top--none slds-size--1-of-1">
+                                <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-show--inline-block pageBreakInsideAvoid">
+                                    <!-- POLICY BENEFITS MAIN ACCOUNT -->
+                                    <div class="slds-grow slds-media slds-no-space">
+                                        <span class="slds-avatar slds-avatar_medium">
+                                            <c:icon elementId="policyMainIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/user-regular.svg')}" type="uxpin"/>
+                                        </span>
+                                        <div class="slds-media__body">
+                                            <div class="slds-form-element__row">
+                                                <h1 class="label slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate" title="{!mapAccountsByIds[mainAccountId].Client_Preferred_Name__c}">{!mapAccountsByIds[mainAccountId].Client_Preferred_Name__c}</h1>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element__row slds-m-bottom--x-small">
+                                        <fieldset class="slds-container slds-form-element slds-m-left--x-small slds-m-top--xx-small slds-size--1-of-1 slds-theme_default">
+                                            <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title--caps slds-text-title_bold slds-truncate" title="Protection">Protection</h2>
+                                            <div class="slds-border--bottom slds-grid slds-m-bottom--x-small slds-m-top--x-small slds-wrap">
+                                                <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                    <c:policyBenefitTypeCheck label="Life"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainLifeProtection"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/heartbeat.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Total_Life_Cover__c)), mapAccountsByIds[mainAccountId].Total_Life_Cover__c > 0)}"
+                                                    />
+                                                    <c:policyBenefitTypeCheck label="Income Protection"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainDIProtection"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/hospital.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Total_DI_Cover__c)), mapAccountsByIds[mainAccountId].Total_DI_Cover__c > 0)}"
+                                                    />
+                                                </div>
+                                                <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                    <c:policyBenefitTypeCheck label="Total Disability"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainTPDProtection"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/crutch.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Total_TPD_Cover__c)), mapAccountsByIds[mainAccountId].Total_TPD_Cover__c > 0)}"
+                                                    />
+                                                    <c:policyBenefitTypeCheck label="Health"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainHealthProtection"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/heart-regular.svg')}"
+                                                                              check="{!mapAccountsByIds[mainAccountId].Conga_Health_Policy_Exists__c == 'Yes'}"
+                                                    />
+                                                </div>
+                                                <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                    <c:policyBenefitTypeCheck label="Trauma"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainTraumaProtection"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/procedures.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Total_Trauma_Cover__c)), mapAccountsByIds[mainAccountId].Total_Trauma_Cover__c > 0)}"
+                                                    />
+                                                    <c:policyBenefitTypeCheck label="Business"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainBusinessProtection"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/graph-regular.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Total_Business_Expense_Cover__c)), mapAccountsByIds[mainAccountId].Total_Business_Expense_Cover__c > 0)}"
+                                                    />
+                                                </div>
+                                                <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                    <c:policyBenefitTypeCheck label="Waiver of Premium"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainWaiverOfPremiumProtection"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/cloud-regular.svg')}"
+                                                                              check="{!mainAccountWaiverofPremium}"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <!-- GROWTH -->
+                                            <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title--caps slds-text-title_bold slds-truncate" title="Growth">Growth</h2>
+                                            <div class="slds-border--bottom slds-grid slds-m-bottom--x-small slds-m-top--x-small slds-wrap">
+                                                <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                    <c:policyBenefitTypeCheck label="Kiwisaver"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainKiwisaverGrowth"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/piggy-bank.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Number_of_Retirement_Assets__c)), mapAccountsByIds[mainAccountId].Number_of_Retirement_Assets__c >= 1)}"
+                                                    />
+                                                    <!-- Previously: check="{!NOT(ISNULL(mapAccountsByIds[mainAccountId].Total_KiwiSaver_Assets__c))} -->
+                                                    <c:policyBenefitTypeCheck label="Investment"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainInvestmentGrowth"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/chart-line.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Number_of_Investment_Assets__c)), mapAccountsByIds[mainAccountId].Number_of_Investment_Assets__c > 0)}"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <!-- FINANCE -->
+                                            <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title--caps slds-text-title_bold slds-truncate" title="Finance">Finance</h2>
+                                            <div class="slds-grid slds-m-top--x-small slds-wrap">
+                                                <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                    <c:policyBenefitTypeCheck label="Mortgage"
+                                                                              containerIconClass="avatar-custom-small"
+                                                                              elementId="mainMortgageFinance"
+                                                                              iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/home.svg')}"
+                                                                              check="{!AND(NOT(ISNULL(mapAccountsByIds[mainAccountId].Number_of_Mortgage_Investment_Liabilitie__c)), mapAccountsByIds[mainAccountId].Number_of_Mortgage_Investment_Liabilitie__c > 0)}"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                    </div>
+                                </fieldset>
+                            </div>
+                            <div class="slds-col slds-large-size--1-of-2 slds-medium-size--1-of-2 slds-p-around--x-small slds-p-top--none slds-size--1-of-1">
+                                <apex:outputPanel rendered="{!NOT(ISNULL(partnerAccountId))}">
+                                    <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-show--inline-block pageBreakInsideAvoid">
+                                        <!-- POLICY BENEFITS PARTNER ACCOUNT -->
+                                        <div class="slds-grow slds-media slds-no-space">
+                                            <span class="slds-avatar slds-avatar_medium">
+                                                <c:icon elementId="policyMainIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/user-regular.svg')}" type="uxpin"/>
+                                            </span>
+                                            <div class="slds-media__body">
+                                                <div class="slds-form-element__row">
+                                                    <h1 class="label slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate" title="{!mapAccountsByIds[partnerAccountId].Client_Preferred_Name__c}">{!mapAccountsByIds[partnerAccountId].Client_Preferred_Name__c}</h1>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element__row slds-m-bottom--x-small">
+                                            <fieldset class="slds-container slds-form-element slds-m-left--x-small slds-m-top--xx-small slds-size--1-of-1 slds-theme_default">
+                                                <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title--caps slds-text-title_bold slds-truncate" title="Protection">Protection</h2>
+                                                <div class="slds-border--bottom slds-grid slds-m-bottom--x-small slds-m-top--x-small slds-wrap">
+                                                    <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                        <c:policyBenefitTypeCheck label="Life"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerLifeProtection"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/heartbeat.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Total_Life_Cover__c)), mapAccountsByIds[partnerAccountId].Total_Life_Cover__c > 0)}"
+                                                        />
+                                                        <c:policyBenefitTypeCheck label="Income Protection"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerDIProtection"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/hospital.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Total_DI_Cover__c)), mapAccountsByIds[partnerAccountId].Total_DI_Cover__c > 0)}"
+                                                        />
+                                                    </div>
+                                                    <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                        <c:policyBenefitTypeCheck label="Total Disability"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerTPDProtection"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/crutch.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Total_TPD_Cover__c)), mapAccountsByIds[partnerAccountId].Total_TPD_Cover__c > 0)}"
+                                                        />
+                                                        <c:policyBenefitTypeCheck label="Health"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerHealthProtection"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/heart-regular.svg')}"
+                                                                                  check="{!mapAccountsByIds[partnerAccountId].Conga_Health_Policy_Exists__c == 'Yes'}"
+                                                        />
+                                                    </div>
+                                                    <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                        <c:policyBenefitTypeCheck label="Trauma"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerTraumaProtection"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/procedures.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Total_Trauma_Cover__c)), mapAccountsByIds[partnerAccountId].Total_Trauma_Cover__c > 0)}"
+                                                        />
+                                                        <c:policyBenefitTypeCheck label="Business"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerBusinessProtection"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/graph-regular.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Total_Business_Expense_Cover__c)), mapAccountsByIds[partnerAccountId].Total_Business_Expense_Cover__c > 0)}"
+                                                        />
+                                                    </div>
+                                                    <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                        <c:policyBenefitTypeCheck label="Waiver of Premium"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerWaiverOfPremiumProtection"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/cloud-regular.svg')}"
+                                                                                  check="{!partnerAccountWaiverofPremium}"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <!-- GROWTH -->
+                                                <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title--caps slds-text-title_bold slds-truncate" title="Growth">Growth</h2>
+                                                <div class="slds-border--bottom slds-grid slds-m-bottom--x-small slds-m-top--x-small slds-wrap">
+                                                    <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                        <c:policyBenefitTypeCheck label="Kiwisaver"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerKiwisaverGrowth"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/piggy-bank.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Number_of_Retirement_Assets__c)), mapAccountsByIds[partnerAccountId].Number_of_Retirement_Assets__c >= 1)}"
+                                                        />
+                                                        <c:policyBenefitTypeCheck label="Investment"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerInvestmentGrowth"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/chart-line.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Number_of_Investment_Assets__c)), mapAccountsByIds[partnerAccountId].Number_of_Investment_Assets__c > 0)}"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <!-- FINANCE -->
+                                                <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title--caps slds-text-title_bold slds-truncate" title="Finance">Finance</h2>
+                                                <div class="slds-grid slds-m-top--x-small slds-wrap">
+                                                    <div class="slds-form-element__row slds-m-bottom--none slds-size--1-of-1">
+                                                        <c:policyBenefitTypeCheck label="Mortgage"
+                                                                                  containerIconClass="avatar-custom-small"
+                                                                                  elementId="partnerMortgageFinance"
+                                                                                  iconURL="{!URLFOR($Resource.Akina, 'icons/uxpin/home.svg')}"
+                                                                                  check="{!AND(NOT(ISNULL(mapAccountsByIds[partnerAccountId].Number_of_Mortgage_Investment_Liabilitie__c)), mapAccountsByIds[partnerAccountId].Number_of_Mortgage_Investment_Liabilitie__c > 0)}"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </div>
+                                    </fieldset>
+                                </apex:outputPanel>
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+                
+
+
+                <div class="slds-form-element__row slds-size--1-of-1">
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'ics')))}" layout="none">
+                        <div class="slds-col slds-size--1-of-1 slds-p-around--x-small slds-p-top--none">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-form-element pageBreakInsideAvoid slds-show--inline-block">
+                                <!-- Existing Cover Serviced By Apex Advice -->
+                                <div class="slds-media slds-no-space slds-grow">
+                                    <span class="slds-avatar slds-avatar_medium">
+                                        <c:icon elementId="ExistingCoverIcon" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/uxpin/book-regular.svg')}" type="uxpin"/>
+                                    </span>
+                                    <div class="slds-media__body">
+                                        <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate" title="Existing Cover Serviced By Apex Advice">Insurance Cover Summary</h1>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-form-element__row slds-size--1-of-1">
+                                        <div class="label slds-size--3-of-12">Name</div>
+                                        <apex:repeat value="{!benefitTypes}" var="type">
+                                            <div class="label {!IF(type == 'Health', 'slds-size--1-of-12', 'slds-size--1-of-8')}">
+                                                {!IF(type == 'TPD', 'Total Disability', type)}
+                                            </div>
+                                        </apex:repeat>
+                                    </div>
+                                    <apex:repeat value="{!theAccounts}" var="acc">
+                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                            <apex:outputText styleClass="slds-m-top--xx-small slds-size--3-of-12" value="{!acc.account.Client_Preferred_Name__c}" />
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!AND(NOT(ISNULL(acc.account.Total_Life_Cover__c)), acc.account.Total_Life_Cover__c > 0)}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!acc.account.Total_Life_Cover__c}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!OR(acc.account.Total_Life_Cover__c == null, acc.account.Total_Life_Cover__c == 0)}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!AND(NOT(ISNULL(acc.account.Total_TPD_Cover__c)), acc.account.Total_TPD_Cover__c > 0)}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!acc.account.Total_TPD_Cover__c}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!OR(acc.account.Total_TPD_Cover__c == null, acc.account.Total_TPD_Cover__c == 0)}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!AND(NOT(ISNULL(acc.account.Total_Trauma_Cover__c)), acc.account.Total_Trauma_Cover__c > 0)}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!acc.account.Total_Trauma_Cover__c}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!OR(acc.account.Total_Trauma_Cover__c == null, acc.account.Total_Trauma_Cover__c == 0)}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!AND(NOT(ISNULL(acc.account.Total_DI_Cover__c)), acc.account.Total_DI_Cover__c > 0)}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!acc.account.Total_DI_Cover__c}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!OR(acc.account.Total_DI_Cover__c == null, acc.account.Total_DI_Cover__c == 0)}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-12">
+                                                <apex:outputText value="{!acc.account.Conga_Health_Policy_Exists__c}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!AND(NOT(ISNULL(acc.account.Total_Business_Expense_Cover__c)), acc.account.Total_Business_Expense_Cover__c > 0)}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!acc.account.Total_Business_Expense_Cover__c}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!OR(acc.account.Total_Business_Expense_Cover__c == null, acc.account.Total_Business_Expense_Cover__c == 0)}" />
+                                            </div>
+                                        </div>
+                                    </apex:repeat>
+                                    <apex:repeat value="{!beneficiarySummaryMap}" var="benKey">
+                                        <apex:variable var="currentBen" value="{!beneficiarySummaryMap[benKey]}"/>
+                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                            <apex:outputText styleClass="slds-m-top--xx-small slds-size--3-of-12" value="{!benKey}" />
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!beneficiarySummaryMap[benKey]['Life'] > 0}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!beneficiarySummaryMap[benKey]['Life']}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!beneficiarySummaryMap[benKey]['Life'] == 0}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!beneficiarySummaryMap[benKey]['TPD'] > 0}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!beneficiarySummaryMap[benKey]['TPD']}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!beneficiarySummaryMap[benKey]['TPD'] == 0}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!beneficiarySummaryMap[benKey]['Trauma'] > 0}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!beneficiarySummaryMap[benKey]['Trauma']}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!beneficiarySummaryMap[benKey]['Trauma'] == 0}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!beneficiarySummaryMap[benKey]['Income Protection'] > 0}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!beneficiarySummaryMap[benKey]['Income Protection']}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!beneficiarySummaryMap[benKey]['Income Protection'] == 0}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-12">
+                                                <apex:outputText value="{!IF(beneficiarySummaryMap[benKey]['Health'] == 1, 'Yes', 'No')}" />
+                                            </div>
+                                            <div class="slds-m-top--xx-small slds-size--1-of-8">
+                                                <apex:outputText rendered="{!beneficiarySummaryMap[benKey]['Business Expenses'] > 0}" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!beneficiarySummaryMap[benKey]['Business Expenses']}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="No" rendered="{!beneficiarySummaryMap[benKey]['Business Expenses'] == 0}" />
+                                            </div>
+                                        </div>
+                                    </apex:repeat>
+                                    <div class="slds-form-element__row slds-size--1-of-1">
+                                        <div class="label slds-border--top slds-m-top--x-small slds-p-top--x-small slds-size--3-of-12">Combined Monthly Premium</div>
+                                        <div class="slds-size--9-of-12">
+                                            <div class="label slds-border--top slds-m-top--x-small slds-p-top--x-small">
+                                                <apex:outputText rendered="{!mapAccountsByIds[mainAccountId].Total_Joint_Policy_Monthly_Premium__c > 0}" value="{0, Number, Currency}">
+                                                    <apex:param value="{!mapAccountsByIds[mainAccountId].Total_Joint_Policy_Monthly_Premium__c}" />
+                                                </apex:outputText>
+                                                <apex:outputText value="$0.00" rendered="{!mapAccountsByIds[mainAccountId].Total_Joint_Policy_Monthly_Premium__c == 0}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="slds-section slds-is-open slds-form--compound slds-m-top--none slds-m-bottom--none">
+        <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+            <h3 class="slds-section__title">
+                <span class="slds-button slds-section__title-action" title="Details">
+                    <span class="slds-size--11-of-12">Details</span>
+                    <c:icon elementId="closeAllSectionsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#dash')}" classes="closeAll slds-hide slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, null, false)" />
+                    <c:icon elementId="openAllSectionsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#add')}" classes="openAll slds-show slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, null, true)" />
+                </span>
+            </h3>
+        </apex:outputPanel>
+        <div class="slds-p-top--none slds-section__content">
+            <div class="slds-grid slds-wrap slds-grid_align-center">
+                <div class="slds-form-element__row slds-grid slds-wrap slds-size--1-of-1 slds-m-bottom--none">
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'as')))}" layout="none">
+                        <div class="slds-col slds-large-size--1-of-2 slds-medium-size--1-of-2 slds-size--1-of-1 slds-p-around--small slds-p-bottom--none">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-p-bottom--none">
+                                <!-- Assets -->
+                                <div class="slds-media slds-no-space slds-grow">
+                                    <span class="slds-avatar slds-avatar_medium">
+                                        <c:icon elementId="AssetsIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/car.svg')}" type="uxpin"/>
+                                    </span>
+                                    <div class="slds-media__body">
+                                        <div class="slds-form-element__row">
+                                            <h1 class="slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate" title="Assets">Assets</h1>
+                                            <apex:outputPanel rendered="{!AND(!isAssetsEmpty,ISNULL(printOptions))}" layout="none">
+                                                <c:icon elementId="closeAssetsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#dash')}" classes="closeSection slds-hide slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'assets', false)" />
+                                                <c:icon elementId="openAssetsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#add')}" classes="openSection slds-show slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'assets', true)" />
+                                            </apex:outputPanel>
+                                        </div>
+                                    </div>
+                                </div>
+                                <apex:outputPanel rendered="{!!isAssetsEmpty}" layout="none">
+                                    <div class="slds-grid slds-wrap">
+                                        <div id="assetsSummaryView" class="slds-show slds-size--1-of-1 slds-m-bottom--x-small">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-size--1-of-2 slds-text-heading--medium">Total Assets</div>
+                                                <apex:outputText styleClass="label slds-size--1-of-2 slds-text-heading--medium currencyTotals" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalAssets}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                        <div id="assetsDetailView" class="slds-hide slds-size--1-of-1">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="label slds-size--1-of-3">Asset Type</div>
+                                                <div class="label slds-size--1-of-3">Asset Owner</div>
+                                                <div class="label slds-size--1-of-3">Asset Value</div>
+                                            </div>
+                                            <apex:repeat value="{!theAssets}" var="ass">
+                                                <div class="slds-form-element__row slds-size--1-of-1">
+                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputLink styleClass="slds-size--1-of-3" value="/{!ass.asset.Id}">{!ass.asset.Type__c}</apex:outputLink>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputText styleClass="slds-size--1-of-3" value="{!ass.asset.Type__c}" />
+                                                    </apex:outputPanel>
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="{!ass.strOwnerType}" />
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                        <apex:param value="{!ass.asset.Value__c}" />
+                                                    </apex:outputText>
+                                                </div>
+                                            </apex:repeat>
+                                            <div class="slds-border--top slds-form-element__row slds-m-top--x-small slds-size--1-of-1">
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="label slds-size--1-of-3 slds-m-top--x-small">Total Assets</div>
+                                            </div>
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="slds-size--1-of-3"></div>
+                                                <apex:outputText styleClass="label slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalAssets}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </apex:outputPanel>
+                                <apex:outputPanel styleClass="slds-size--1-of-1 slds-align--absolute-center" rendered="{!isAssetsEmpty}">
+                                    <apex:outputText rendered="{!theFactFind.No_Assets__c}" value="You have no assets" />
+                                    <apex:outputText rendered="{!theFactFind.Chosen_Not_to_Provide_Asset_Details__c}" value="You chose not to provide these details" />
+                                    <apex:outputText rendered="{!AND(!theFactFind.No_Assets__c, !theFactFind.Chosen_Not_to_Provide_Asset_Details__c)}" value="We haven't captured any assets yet." />
+                                </apex:outputPanel>
+                            </fieldset>
+                        </div>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'li')))}" layout="none">
+                        <div class="slds-col slds-large-size--1-of-2 slds-medium-size--1-of-2 slds-size--1-of-1 slds-p-around--small slds-p-bottom--none">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-p-bottom--none">
+                                <!-- Liabilities -->
+                                <div class="slds-media slds-no-space slds-grow">
+                                    <span class="slds-avatar slds-avatar_medium">
+                                        <c:icon elementId="LiabilitiesIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/file-invoice-dollar.svg')}" type="uxpin"/>
+                                    </span>
+                                    <div class="slds-media__body">
+                                        <div class="slds-form-element__row">
+                                            <h1 class="slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate slds-m-left_small" title="Liabilities">Liabilities</h1>
+                                            <apex:outputPanel rendered="{!AND(!isLiabilitiesEmpty,ISNULL(printOptions))}" layout="none">
+                                                <c:icon elementId="closeLiabilitiesIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#dash')}" classes="closeSection slds-hide slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'liabilities', false)" />
+                                                <c:icon elementId="openLiabilitiesIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#add')}" classes="openSection slds-show slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'liabilities', true)" />
+                                            </apex:outputPanel>
+                                        </div>
+                                    </div>
+                                </div>
+                                <apex:outputPanel rendered="{!!isLiabilitiesEmpty}" layout="none">
+                                    <div class="slds-grid slds-wrap">
+                                        <div id="liabilitiesSummaryView" class="slds-show slds-size--1-of-1 slds-m-bottom--x-small">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-size--1-of-2 slds-text-heading--medium">Total Liabilities</div>
+                                                <apex:outputText styleClass="label slds-size--1-of-2 slds-text-heading--medium currencyTotals" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalLiabilities[0]}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                        <div id="liabilitiesDetailView" class="slds-hide slds-size--1-of-1">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="label slds-size--1-of-3">Liability Type</div>
+                                                <div class="label slds-size--1-of-3">Liability Owner</div>
+                                                <div class="label slds-size--1-of-3">Liability Value</div>
+                                            </div>
+                                            <apex:repeat value="{!theLiabilities}" var="liab">
+                                                <div class="slds-form-element__row slds-size--1-of-1">
+                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputLink styleClass="slds-size--1-of-3" value="/{!liab.liability.Id}">{!liab.liability.Type__c}</apex:outputLink>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputText styleClass="slds-size--1-of-3" value="{!liab.liability.Type__c}" />
+                                                    </apex:outputPanel>
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="{!liab.strOwnerType}" />
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                        <apex:param value="{!liab.liability.Current_Balance__c}" />
+                                                    </apex:outputText>
+                                                </div>
+                                            </apex:repeat>
+                                            <div class="slds-border--top slds-form-element__row slds-m-top--x-small slds-size--1-of-1">
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="label slds-size--1-of-3 slds-m-top--x-small">Total Liabilities</div>
+                                            </div>
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="slds-size--1-of-3"></div>
+                                                <apex:outputText styleClass="label slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalLiabilities[0]}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </apex:outputPanel>
+                                <apex:outputPanel styleClass="slds-size--1-of-1 slds-align--absolute-center" rendered="{!isLiabilitiesEmpty}">
+                                    <apex:outputText rendered="{!theFactFind.No_Liabilities__c}" value="You have no Liabilities" />
+                                    <apex:outputText rendered="{!theFactFind.Chosen_Not_to_Provide_Liability_Details__c}" value="You chose not to provide these details" />
+                                    <apex:outputText rendered="{!AND(!theFactFind.No_Liabilities__c, !theFactFind.Chosen_Not_to_Provide_Liability_Details__c)}" value="We haven't captured any liabilities yet." />
+                                </apex:outputPanel>
+                            </fieldset>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+                <div class="slds-form-element__row slds-grid slds-wrap slds-size--1-of-1">
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'io')))}" layout="none">
+                        <div class="slds-col slds-large-size--1-of-2 slds-medium-size--1-of-2 slds-size--1-of-1 slds-p-around--small">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-p-bottom--none">
+                                <!-- Assets -->
+                                <div class="slds-media slds-no-space slds-grow">
+                                    <span class="slds-avatar slds-avatar_medium">
+                                        <c:icon elementId="IncomeIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/money-check-alt.svg')}" type="uxpin"/>
+                                    </span>
+                                    <div class="slds-media__body">
+                                        <div class="slds-form-element__row">
+                                            <h1 class="slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate" title="Income">Income</h1>
+                                            <apex:outputPanel rendered="{!AND(!isIncomesEmpty,ISNULL(printOptions))}" layout="none">
+                                                <c:icon elementId="closeIncomeIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#dash')}" classes="closeSection slds-hide slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'incomes', false)" />
+                                                <c:icon elementId="openIncomeIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#add')}" classes="openSection slds-show slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'incomes', true)" />
+                                            </apex:outputPanel>
+                                        </div>
+                                    </div>
+                                </div>
+                                <apex:outputPanel rendered="{!!isIncomesEmpty}" layout="none">
+                                    <div class="slds-grid slds-wrap">
+                                        <div id="incomesSummaryView" class="slds-show slds-size--1-of-1 slds-m-bottom--x-small">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-size--1-of-2 slds-text-heading--medium">Total Income</div>
+                                                <apex:outputText styleClass="label slds-size--1-of-2 slds-text-heading--medium currencyTotals" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalIncomeExpenses[0] + totalIncomeExpenses[1]}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                        <div id="incomesDetailView" class="slds-hide slds-size--1-of-1">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="label slds-size--1-of-3">Type</div>
+                                                <div class="label slds-size--1-of-3">Income Owner</div>
+                                                <div class="label slds-size--1-of-3">Amount</div>
+                                            </div>
+                                            <apex:repeat value="{!theIncomesAndExpenses['Income']}" var="inc">
+                                                <div class="slds-form-element__row slds-size--1-of-1">
+                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputLink styleClass="slds-size--1-of-3" value="/{!inc.incomeExpense.Id}">{!inc.incomeExpense.Type__c}</apex:outputLink>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputText styleClass="slds-size--1-of-3" value="{!inc.incomeExpense.Type__c}" />
+                                                    </apex:outputPanel>
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="{!inc.incomeExpense.Primary_Owner__r.Client_Preferred_Name__c}" />
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                        <apex:param value="{!inc.incomeExpense.Amount__c}" />
+                                                    </apex:outputText>
+                                                </div>
+                                            </apex:repeat>
+                                            <div class="slds-border--top slds-form-element__row slds-m-top--x-small slds-size--1-of-1">
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="label slds-size--1-of-3 slds-m-top--x-small">Total Income</div>
+                                            </div>
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-size--1-of-3"></div>
+                                                <div class="slds-size--1-of-3"></div>
+                                                <apex:outputText styleClass="label slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalIncomeExpenses[0] + totalIncomeExpenses[1]}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </apex:outputPanel>
+                                <apex:outputPanel styleClass="slds-size--1-of-1 slds-align--absolute-center" rendered="{!isIncomesEmpty}">
+                                    <apex:outputText rendered="{!theFactFind.Chosen_Not_to_Provide_Income_Details__c}" value="You chose not to provide these details" />
+                                    <apex:outputText rendered="{!!theFactFind.Chosen_Not_to_Provide_Income_Details__c}" value="We haven't captured any income yet." />
+                                </apex:outputPanel>
+                            </fieldset>
+                        </div>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'ex')))}" layout="none">
+                        <div class="slds-col slds-large-size--1-of-2 slds-medium-size--1-of-2 slds-size--1-of-1 slds-p-around--small">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-p-bottom--none">
+                                <!-- Assets -->
+                                <div class="slds-media slds-no-space slds-grow">
+                                    <span class="slds-avatar slds-avatar_medium">
+                                        <c:icon elementId="ExpensesIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/wallet.svg')}" type="uxpin"/>
+                                    </span>
+                                    <div class="slds-media__body">
+                                        <div class="slds-form-element__row">
+                                            <h1 class="slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate slds-m-left_small" title="Expenses">Expenses</h1>
+                                            <apex:outputPanel rendered="{!AND(!isExpensesEmpty,ISNULL(printOptions))}" layout="none">
+                                                <c:icon elementId="closeExpensesIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#dash')}" classes="closeSection slds-hide slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'expenses', false)" />
+                                                <c:icon elementId="openExpensesIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#add')}" classes="openSection slds-show slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleSectionSummary(this, 'expenses', true)" />
+                                            </apex:outputPanel>
+                                        </div>
+                                    </div>
+                                </div>
+                                <apex:outputPanel rendered="{!!isExpensesEmpty}" layout="none">
+                                    <div class="slds-grid slds-wrap">
+                                        <div id="expensesSummaryView" class="slds-show slds-size--1-of-1 slds-m-bottom--x-small">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-size--1-of-2 slds-text-heading--medium">Total Expenses</div>
+                                                <apex:outputText styleClass="label slds-size--1-of-2 slds-text-heading--medium currencyTotals" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalIncomeExpenses[2] * 12}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                        <div id="expensesDetailView" class="slds-hide slds-size--1-of-1">
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="label slds-size--1-of-2">Type</div>
+                                                <div class="label slds-size--1-of-3">Amount</div>
+                                            </div>
+                                            <apex:repeat value="{!theIncomesAndExpenses['Expense']}" var="exp">
+                                                <div class="slds-form-element__row slds-size--1-of-1">
+                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputLink styleClass="slds-size--1-of-2" value="/{!exp.incomeExpense.Id}">{!exp.incomeExpense.Type__c}</apex:outputLink>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                        <apex:outputText styleClass="slds-size--1-of-2" value="{!exp.incomeExpense.Type__c}" />
+                                                    </apex:outputPanel>
+                                                    <apex:outputText styleClass="slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                        <apex:param value="{!exp.incomeExpense.Amount__c}" />
+                                                    </apex:outputText>
+                                                </div>
+                                            </apex:repeat>
+                                            <div class="slds-border--top slds-form-element__row slds-m-top--x-small slds-size--1-of-1">
+                                                <div class="slds-large-size--2-of-4"></div>
+                                                <div class="label slds-large-size--1-of-4 slds-m-top--x-small slds-small-size--1-of-2">Monthly Expenses</div>
+                                                <div class="label slds-large-size--1-of-4 slds-m-top--x-small slds-small-size--1-of-2">Annual Expenses</div>
+                                            </div>
+                                            <div class="slds-form-element__row slds-size--1-of-1">
+                                                <div class="slds-large-size--2-of-4"></div>
+                                                <apex:outputText styleClass="label slds-large-size--1-of-4 slds-small-size--1-of-2" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalIncomeExpenses[2]}" />
+                                                </apex:outputText>
+                                                <apex:outputText styleClass="label slds-large-size--1-of-4 slds-small-size--1-of-2" value="${0, Number, ###,###,###}">
+                                                    <apex:param value="{!totalIncomeExpenses[2] * 12}" />
+                                                </apex:outputText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </apex:outputPanel>
+                                <apex:outputPanel styleClass="slds-size--1-of-1 slds-align--absolute-center" rendered="{!isExpensesEmpty}">
+                                    <apex:outputText rendered="{!theFactFind.Do_not_Know_What_Are_My_Expenses__c}" value="You do not know what your expenses are" />
+                                    <apex:outputText rendered="{!theFactFind.Chosen_Not_to_Provide_Expense_Details__c}" value="You chose not to provide these information" />
+                                    <apex:outputText rendered="{!AND(!theFactFind.Do_not_Know_What_Are_My_Expenses__c, !theFactFind.Chosen_Not_to_Provide_Expense_Details__c)}" value="We haven't captured any expenses yet." />
+                                </apex:outputPanel>
+                            </fieldset>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXISTING ADVICE -->
+    <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'po')))}" layout="none">
+        <div class="slds-section slds-is-open slds-form--compound {!IF(AND(CONTAINS(printOptions, 'print'),OR(CONTAINS(printOptions, 'pd'),OR(CONTAINS(printOptions, 'nw'),OR(CONTAINS(printOptions, 'di'),OR(CONTAINS(printOptions, 'nac'),OR(CONTAINS(printOptions, 'csa'),OR(CONTAINS(printOptions, 'gl'),CONTAINS(printOptions, 'ics')))))))),'pageBreakBeforeAlways','')} slds-m-top--none slds-m-bottom--none">
+            <h3 class="slds-section__title">
+                <span class="slds-button slds-section__title-action" title="Existing Advice">
+                    <span class="slds-size--11-of-12">Existing Advice</span>
+                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                        <c:icon elementId="closeAllSectionsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#dash')}" classes="closePolicyDetails slds-hide slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="togglePolicyDetails()" />
+                        <c:icon elementId="openAllSectionsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#add')}" classes="openPolicyDetails slds-show slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="togglePolicyDetails()" />
+                    </apex:outputPanel>
+                </span>
+            </h3>
+            <div class="slds-p-top--none slds-section__content policyDetails slds-hide">
+                <!-- DETAILED -->
+                <div class="slds-grid slds-wrap slds-grid_align-center">
+                    <div class="slds-col slds-size--1-of-1 slds-p-around--small">
+                        <apex:repeat value="{!listPolicyTypes}" var="type">
+                            <fieldset class="slds-box slds-theme_default slds-container slds-m-bottom--x-small slds-p-bottom--none">
+                                <h1 class="label slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate" title="{!type}">{!type} Policies</h1>
+                                <apex:repeat value="{!mapPolicies[type]}" var="policy">
+                                    <div class="slds-form-element__row slds-m-top--xx-small slds-show--inline-block {!IF(mapPolicies[type][0].Id == policy.Id, '', 'pageBreakInsideAvoid')}">
+                                        <fieldset class="slds-box slds-theme_default slds-container slds-size--1-of-1 slds-m-bottom--x-small slds-p-bottom--none">
+                                            <div class="slds-grid slds-wrap">
+                                                <div class="slds-col slds-size--1-of-3">
+                                                    <!-- PLAN NAME -->
+                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                        <a href="/{!policy.Id}" class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title_bold slds-truncate no-color">{!policy.Plan_Name__c}</a>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                        <h1 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title_bold slds-truncate" title="{!policy.Plan_Name__c}">{!policy.Plan_Name__c}</h1>
+                                                    </apex:outputPanel>
+                                                    <!-- NAME -->
+                                                    <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!policy.Name}">{!policy.Name}</h2>
+                                                    <!-- COMMENCED DATE -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(policy.Commencement_Date__c))}" layout="none">
+                                                        <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!policy.Commencement_Date__c}">
+                                                            Commenced:&nbsp;
+                                                            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+                                                                <apex:param value="{!policy.Commencement_Date__c}" />
+                                                            </apex:outputText>
+                                                        </h2>
+                                                    </apex:outputPanel>
+                                                    <!-- PREMIUM -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(policy.Total_Premium__c))}" layout="none">
+                                                        <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!policy.Total_Premium__c}">
+                                                            Total Premium:&nbsp;
+                                                            <apex:outputText styleClass="slds-size--1-of-4" value="${0, Number, ###,###,###}">
+                                                                <apex:param value="{!policy.Total_Premium__c}" />
+                                                            </apex:outputText>
+                                                             {!policy.Premium_Frequency__c}
+                                                        </h2>
+                                                    </apex:outputPanel>
+                                                    <!-- COMPANY LOGO OR NAME -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(policy.Provider__r.Company_Logo__c))}" layout="none">
+                                                        <div class="slds-m-left--small slds-avatar slds-avatar_large">
+                                                            <apex:outputField value="{!policy.Provider__r.Company_Logo__c}" />
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <apex:outputText styleClass="slds-align-middle slds-m-left_small slds-text-title_bold slds-text-title_caps slds-m-right_small slds-size--7-of-8 slds-truncate" value="{!policy.Provider__r.Name}" rendered="{!ISNULL(policy.Provider__r.Company_Logo__c)}" />
+                                                    <!-- OWNERS -->
+                                                    <div class="slds-m-left_small">
+                                                        Owners:&nbsp;
+                                                        <apex:repeat value="{!mapPolicyRolesByIds[policy.Id]}" var="owner">
+                                                            <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                                <apex:outputLink styleClass="slds-size--1-of-3 no-color" value="/{!owner.Account__c}">{!owner.Account__r.Client_Preferred_Name__c}.&nbsp;</apex:outputLink>
+                                                            </apex:outputPanel>
+                                                            <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                                <apex:outputText styleClass="slds-size--1-of-3" value="{!owner.Account__r.Client_Preferred_Name__c}. " />
+                                                            </apex:outputPanel>
+                                                        </apex:repeat>
+                                                    </div>
+                                                    <!-- EXCLUSIONS LOADINGS -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(policy.Exclusions_Loadings__c))}" layout="none">
+                                                        <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-m-top_small" title="{!policy.Exclusions_Loadings__c}">
+                                                            Exclusions/Loadings: {!policy.Exclusions_Loadings__c}
+                                                        </h2>
+                                                    </apex:outputPanel>
+                                                </div>
+                                                <!-- BENEFITS -->
+                                                <div class="slds-col slds-size--2-of-3">
+                                                    <h1 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title_bold slds-truncate" title="Benefits">Benefits</h1>
+                                                    <apex:variable var="currentList" value="{!mapPolicyBenefitsByIds[policy.Id]}"/>
+                                                    <apex:outputPanel rendered="{!currentList.size > 0}" layout="none">
+                                                        <apex:repeat value="{!mapPolicyBenefitsByIds[policy.Id]}" var="benefit">
+                                                            <fieldset class="slds-box slds-container slds-m-bottom--x-small slds-size--1-of-1 slds-theme_default slds-show--inline-block pageBreakInsideAvoid slds-p-bottom--none">
+                                                                <div class="slds-form-element__row">
+                                                                    <!-- BENEFIT ICON -->
+                                                                    <span class="slds-avatar slds-avatar_medium">
+                                                                        <c:icon elementId="{!benefit.Id}-benefitIcon" classes="slds-m-right--small" path="{!URLFOR($Resource.Akina, 'icons/uxpin/user-regular.svg')}" type="uxpin"/>
+                                                                    </span>
+                                                                    <!-- BENEFICIARY NAME -->
+                                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                                        <a href="/{!benefit.Account__c}" class="no-color slds-size--1-of-4 slds-text-title_bold">{!benefit.Account__r.Client_Preferred_Name__c}</a>
+                                                                    </apex:outputPanel>
+                                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                                        <h2 class="slds-size--1-of-4 slds-text-title_bold" title="{!benefit.Account__r.Client_Preferred_Name__c}">{!benefit.Account__r.Client_Preferred_Name__c}</h2>
+                                                                    </apex:outputPanel>
+                                                                    <!-- BENEFIT TYPE ICON -->
+                                                                    <span class="slds-col slds-avatar avatar-custom-small">
+                                                                        <c:icon elementId="{!benefit.Id}-benefitIcon" classes="slds-m-right--small" path="{!benefit.Type_Icon__c}" type="uxpin"/>
+                                                                    </span>
+                                                                    <!-- BENEFIT TYPE AND NAME -->
+                                                                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                                        <apex:outputLink styleClass="slds-col slds-size--2-of-4 no-color" value="/{!benefit.Id}">{!benefit.Type__c} - {!benefit.Name}</apex:outputLink>
+                                                                    </apex:outputPanel>
+                                                                    <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                                        <apex:outputText styleClass="slds-col slds-size--2-of-4" value="{!benefit.Type__c} - {!benefit.Name}" />
+                                                                    </apex:outputPanel>
+                                                                </div>
+                                                                <!-- SUM INSURED -->
+                                                                <apex:outputPanel rendered="{!NOT(ISNULL(benefit.Sum_Insured__c))}" layout="none">
+                                                                    <div class="slds-form-element__row slds-grid slds-m-bottom--none slds-m-left--x-large slds-wrap">
+                                                                        <span class="slds-col slds-size--1-of-4 slds-text-title_bold">Sum Insured</span>
+                                                                        <apex:outputText styleClass="slds-col slds-size--1-of-4 slds-text-title_bold slds-m-left--medium" value="${0,Number,###,###,###}">
+                                                                            <apex:param value="{!benefit.Sum_Insured__c}" />
+                                                                        </apex:outputText>
+                                                                    </div>
+                                                                </apex:outputPanel>
+                                                                <!-- BENEFIT PREMIUM -->
+                                                                <apex:outputPanel rendered="{!NOT(ISNULL(benefit.Benefit_Premium__c))}" layout="none">
+                                                                    <div class="slds-form-element__row slds-grid slds-m-bottom--none slds-m-left--x-large slds-wrap">
+                                                                        <span class="slds-col slds-size--1-of-4 slds-text-title_bold">Benefit Premium</span>
+                                                                        <apex:outputText styleClass="slds-col slds-size--1-of-4 slds-text-title_bold slds-m-left--medium" value="{0, Number, Currency}">
+                                                                            <apex:param value="{!benefit.Benefit_Premium__c}" />
+                                                                        </apex:outputText>
+                                                                    </div>
+                                                                </apex:outputPanel>
+                                                                <div class="slds-border--top slds-form-element__row slds-grid slds-m-left--x-large slds-m-top--x-small slds-p-top--x-small slds-wrap">
+                                                                    <!-- CPI LINKED -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.CPI_Linked__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">CPI Linked</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="checkCPI{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- WAIVER OF PREMIUM -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Waiver_of_Premium__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Waiver of Premium</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="waiverOfPremium{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- BENEFIT STRUCTURE -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Benefit_Structure__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Benefit Structure</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Benefit_Structure__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- WAITING PERIOD IN WEEKS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Waiting_Period_Weeks__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Waiting Period (Weeks)</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Waiting_Period_Weeks__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- PREMIUM STRUCTURE -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Premium_Structure__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Premium Structure</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Premium_Structure__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- BUYBACK OPTION -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Buyback_Option__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Buyback Option</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="buybackOption{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- FUTURE INSURABILITY -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Future_Insurability__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Future Insurability</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="futureInsurability{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- ACCELERATE STAND ALONE CHOICE -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Accelerate_Stand_Alone_Choice__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Accelerate/Stand Alone Choice</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Accelerate_Stand_Alone_Choice__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- CANCER UPGRADE -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Cancer_Upgrade__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Cancer Upgrade</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="cancerUpgrade{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- MATERNITY BENEFIT -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Maternity_Benefit__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Maternity Benefit</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="maternityBenefit{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- CHILD TRAUMA -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Child_Trauma__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Child Trauma</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="childTrauma{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- WOMEN'S SPECIFIC CONDITIONS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Women_s_Specific_Conditions__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Women's Specific Conditions</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="${0, Number, ###,###,###}">
+                                                                            <apex:param value="{!benefit.Women_s_Specific_Conditions__c}" />
+                                                                        </apex:outputText>
+                                                                    </apex:outputPanel>
+                                                                    <!-- MEN'S SPECIFIC CONDITIONS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Men_s_Specific_Conditions__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Men's Specific Conditions</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="${0, Number, ###,###,###}">
+                                                                            <apex:param value="{!benefit.Men_s_Specific_Conditions__c}" />
+                                                                        </apex:outputText>
+                                                                    </apex:outputPanel>
+                                                                    <!-- AGREED INDEMNITY CHOICE -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Agreed_Indemnity_Choice__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Agreed/Indemnity Choice</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Agreed_Indemnity_Choice__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- BENEFIT PERIOD -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Benefit_Period__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Benefit Period</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Benefit_Period__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- CLAIM PERIOD -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Claim_Period__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Claim Period</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Claim_Period__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- BENEFIT FREQUENCY -->
+                                                                    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL(benefit.Benefit_Frequency__c))}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Benefit Frequency</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Benefit_Frequency__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- BEST DOCTORS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Best_Doctors__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Best Doctors</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="bestDoctors{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- SPECIALIST TESTS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Specialist_Tests__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Specialist &amp; Tests</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="specialistTest{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- OPTICAL -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Optical__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Optical</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="optical{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- DENTAL -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Dental__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Dental</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="dental{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- EXTRAS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Extras__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Extras</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="extras{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- PRIVATE HOSPITAL -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Private_Hospital__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Private Hospital</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="privateHospital{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                    <!-- EXCESS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!AND(NOT(ISNULL(benefit.Excess__c)),benefit.Type__c = 'Health')}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Excess</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="${0, Number, ###,###,###}">
+                                                                            <apex:param value="{!benefit.Excess__c}" />
+                                                                        </apex:outputText>
+                                                                    </apex:outputPanel>
+                                                                    <!-- SPECIALIST EXCESS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!AND(NOT(ISNULL(benefit.Specialist_Excess__c)),benefit.Type__c = 'Health')}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Specialist Excess</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Specialist_Excess__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- HOSPITAL EXCESS -->
+                                                                    <apex:outputPanel layout="none" rendered="{!AND(NOT(ISNULL(benefit.Hospital_Excess__c)),benefit.Type__c = 'Health')}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Hospital Excess</span>
+                                                                        <apex:outputText styleClass="slds-size--1-of-4 slds-p-left--x-small" value="{!benefit.Hospital_Excess__c}" />
+                                                                    </apex:outputPanel>
+                                                                    <!-- PREMIUM PAYBACK -->
+                                                                    <apex:outputPanel layout="none" rendered="{!benefit.Premium_Payback__c = true}">
+                                                                        <span class="slds-size--1-of-4 slds-m-bottom--x-small">Premium Payback</span>
+                                                                        <span class="slds-avatar slds-avatar_medium check-benefit slds-size--1-of-4">
+                                                                            <c:icon elementId="premiumPayback{!benefit.Id}" classes="slds-m-right--small icon" path="{!URLFOR($Resource.Akina, 'icons/material/check_circle-24px.svg')}" type="material"/>
+                                                                        </span>
+                                                                    </apex:outputPanel>
+                                                                </div>
+                                                            </fieldset>
+                                                        </apex:repeat>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!currentList.size == 0}" layout="none">
+                                                        <span class="slds-grid slds-m-left--x-large slds-m-top--medium slds-size--1-of-1 slds-text-title_bold">This policy doesn't have any beneficiary</span>
+                                                    </apex:outputPanel>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                    </div>
+                                </apex:repeat>
+                            </fieldset>
+                        </apex:repeat>
+
+                        <!-- INVESTMENTS AND KIWISAVER -->
+                        <apex:outputPanel rendered="{!listAssetsPolicies.size > 0}" layout="none">
+                            <fieldset class="slds-box slds-theme_default slds-container pageBreakInsideAvoid slds-m-bottom--small slds-p-bottom--none">
+                            <h1 class="label slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate" title="Investments and Kiwisaver">Investments and KiwiSaver</h1>
+                            <apex:repeat value="{!listAssetsPolicies}" var="theAsset">
+                                <div class="slds-form-element__row slds-m-top--xx-small">
+                                    <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-size--1-of-1 slds-m-bottom--small slds-p-bottom--none">
+                                        <div class="slds-grid slds-wrap">
+                                            <div class="slds-col slds-size--1-of-2">
+                                                <!-- NAME -->
+                                                <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                    <apex:outputLink styleClass="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title_bold slds-truncate no-color" value="/{!theAsset.Id}">{!theAsset.Name}</apex:outputLink>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                    <apex:outputText styleClass="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title_bold slds-truncate" value="{!theAsset.Name}" />
+                                                </apex:outputPanel>
+                                                <!-- TYPE -->
+                                                <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!theAsset.Type__c}">{!theAsset.Type__c}</h2>
+                                                <!-- CLIENT NUMBER -->
+                                                <apex:outputPanel rendered="{!NOT(ISNULL(theAsset.Account_Client_Number__c))}" layout="none">
+                                                    <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!theAsset.Account_Client_Number__c}">{!theAsset.Account_Client_Number__c}</h2>
+                                                </apex:outputPanel>
+                                                <!-- ESTABLISHMENT DATE -->
+                                                <apex:outputPanel rendered="{!NOT(ISNULL(theAsset.Establishment_Date__c))}" layout="none">
+                                                    <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!theAsset.Establishment_Date__c}">
+                                                        Established:&nbsp;
+                                                        <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+                                                            <apex:param value="{!theAsset.Establishment_Date__c}" />
+                                                        </apex:outputText>
+                                                    </h2>
+                                                </apex:outputPanel>
+                                                <!-- COMPANY LOGO / NAME -->
+                                                <apex:outputPanel rendered="{!NOT(ISNULL(theAsset.Provider__r.Company_Logo__c))}" layout="none">
+                                                    <div class="slds-m-left--small slds-avatar slds-avatar_large">
+                                                        <apex:outputField value="{!theAsset.Provider__r.Company_Logo__c}" />
+                                                    </div>
+                                                </apex:outputPanel>
+                                                <apex:outputText styleClass="slds-align-middle slds-m-left_small slds-text-title_bold slds-text-title_caps slds-m-right_small slds-size--7-of-8 slds-truncate" value="{!theAsset.Provider__r.Name}" rendered="{!ISNULL(theAsset.Provider__r.Company_Logo__c)}" />
+                                                <!-- OWNERS -->
+                                                <div class="slds-m-left_small slds-m-bottom--x-small">
+                                                    Owners:&nbsp;
+                                                    <apex:repeat value="{!theAsset.Asset_Roles__r}" var="role">
+                                                        <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                            <apex:outputLink styleClass="slds-size--1-of-3 no-color" value="/{!role.Account__c}">{!role.Account__r.Client_Preferred_Name__c}.&nbsp;</apex:outputLink>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                            <apex:outputText styleClass="slds-size--1-of-3" value="{!role.Account__r.Client_Preferred_Name__c}. " />
+                                                        </apex:outputPanel>
+                                                    </apex:repeat>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size--1-of-2">
+                                                <fieldset class="slds-box slds-container slds-m-bottom--x-small slds-size--1-of-1 slds-theme_default">
+                                                    <!-- CONTRIBUTION AMOUNT -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theAsset.Contribution_Amount__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Contribution Amount</div>
+                                                            <apex:outputText styleClass="slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                                <apex:param value="{!theAsset.Contribution_Amount__c}" />
+                                                            </apex:outputText>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <!-- CONTRIBUTION FREQUENCY -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theAsset.Contribution_Frequency__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Contribution Frequency</div>
+                                                            <apex:outputText styleClass="slds-size--1-of-3" value="{!theAsset.Contribution_Frequency__c}" />
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <!-- VALUE LAST UPDATED -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theAsset.Values_Last_Updated__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Values Last Updated</div>
+                                                            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+                                                                <apex:param value="{!theAsset.Values_Last_Updated__c}" />
+                                                            </apex:outputText>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <!-- VALUE -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theAsset.Value__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Current value</div>
+                                                            <apex:outputText styleClass="label slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                                <apex:param value="{!theAsset.Value__c}" />
+                                                            </apex:outputText>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                </fieldset>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </apex:repeat>
+                        </fieldset>
+                        </apex:outputPanel>
+
+                        <!-- MORTGAGES -->
+                        <apex:outputPanel rendered="{!listLiabilitiesPolicies.size > 0}" layout="none">
+                            <fieldset class="slds-box slds-theme_default slds-container pageBreakInsideAvoid slds-m-bottom--small slds-p-bottom--none">
+                            <h1 class="label slds-align-middle slds-m-right_small slds-page-header__title slds-size--7-of-8 slds-truncate" title="Investments and Kiwisaver">Mortgages</h1>
+                            <apex:repeat value="{!listLiabilitiesPolicies}" var="theLiability">
+                                <div class="slds-form-element__row slds-m-top--xx-small">
+                                    <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-size--1-of-1 slds-m-bottom--small slds-p-bottom--none">
+                                        <div class="slds-grid slds-wrap">
+                                            <div class="slds-col slds-size--1-of-2">
+                                                <!-- NAME -->
+                                                <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                    <apex:outputLink styleClass="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title_bold slds-truncate no-color" value="/{!theLiability.Id}">{!theLiability.Name}</apex:outputLink>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                    <apex:outputText styleClass="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-text-title_bold slds-truncate" value="{!theLiability.Name}" />
+                                                </apex:outputPanel>
+                                                <!-- TYPE -->
+                                                <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!theLiability.Type__c}">{!theLiability.Type__c}</h2>
+                                                <!-- CLIENT NUMBER -->
+                                                <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Client_Number__c))}" layout="none">
+                                                    <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!theLiability.Client_Number__c}">{!theLiability.Client_Number__c}</h2>
+                                                </apex:outputPanel>
+                                                <!-- START DATE -->
+                                                <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Start_Date__c))}" layout="none">
+                                                    <h2 class="slds-align-middle slds-m-left_small slds-m-right_small slds-size--7-of-8 slds-truncate" title="{!theLiability.Start_Date__c}">
+                                                        Established:&nbsp;
+                                                        <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+                                                            <apex:param value="{!theLiability.Start_Date__c}" />
+                                                        </apex:outputText>
+                                                    </h2>
+                                                </apex:outputPanel>
+                                                <!-- COMPANY LOGO / NAME -->
+                                                <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Institution__r.Company_Logo__c))}" layout="none">
+                                                    <div class="slds-m-left--small slds-avatar slds-avatar_large">
+                                                        <apex:outputField value="{!theLiability.Institution__r.Company_Logo__c}" />
+                                                    </div>
+                                                </apex:outputPanel>
+                                                <apex:outputText styleClass="slds-align-middle slds-m-left_small slds-text-title_bold slds-text-title_caps slds-m-right_small slds-size--7-of-8 slds-truncate" value="{!theLiability.Institution__r.Name}" rendered="{!ISNULL(theLiability.Institution__r.Company_Logo__c)}" />
+                                                <!-- OWNERS -->
+                                                <div class="slds-m-left_small slds-m-bottom--x-small">
+                                                    Owners:&nbsp;
+                                                    <apex:repeat value="{!theLiability.Liability_Roles__r}" var="role">
+                                                        <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                                                            <apex:outputLink styleClass="slds-size--1-of-3 no-color" value="/{!role.Account__c}">{!role.Account__r.Client_Preferred_Name__c}.&nbsp;</apex:outputLink>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!!ISNULL(printOptions)}" layout="none">
+                                                            <apex:outputText styleClass="slds-size--1-of-3" value="{!role.Account__r.Client_Preferred_Name__c}. " />
+                                                        </apex:outputPanel>
+                                                    </apex:repeat>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size--1-of-2">
+                                                <fieldset class="slds-box slds-container slds-m-bottom--x-small slds-size--1-of-1 slds-theme_default">
+                                                    <!-- TERM -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Term_Months__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Term</div>
+                                                            <apex:outputText value="{!theLiability.Term_Months__c}" /> months
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <!-- RATE -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Rate__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Rate</div>
+                                                            <apex:outputText value="{0,number, ###.##}%">
+                                                                <apex:param value="{!theLiability.Rate__c}" />
+                                                            </apex:outputText>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <!-- VALUE LAST UPDATED -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Values_Last_Updated__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Values Last Updated</div>
+                                                            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+                                                                <apex:param value="{!theLiability.Values_Last_Updated__c}" />
+                                                            </apex:outputText>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <!-- LOAN AMOUNT -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Loan_Amount__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Loan Amount</div>
+                                                            <apex:outputText styleClass="label slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                                <apex:param value="{!theLiability.Loan_Amount__c}" />
+                                                            </apex:outputText>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                    <!-- CURRENT BALANCE -->
+                                                    <apex:outputPanel rendered="{!NOT(ISNULL(theLiability.Current_Balance__c))}" layout="none">
+                                                        <div class="slds-form-element__row slds-size--1-of-1">
+                                                            <div class="slds-size--1-of-2">Current Balance</div>
+                                                            <apex:outputText styleClass="label slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                                                <apex:param value="{!theLiability.Current_Balance__c}" />
+                                                            </apex:outputText>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                </fieldset>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </apex:repeat>
+                        </fieldset>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+
+    
+    <div class="slds-form-element__row slds-size--1-of-1">
+        <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'nac')))}" layout="none">
+            <div style="padding-top: 20px"></div>
+            <h3 class="slds-section__title">
+                <span class="slds-button slds-section__title-action" title="Existing Advice">
+                    <span class="slds-size--11-of-12">Non Apex Serviced Cover</span>
+                    <apex:outputPanel rendered="{!ISNULL(printOptions)}" layout="none">
+                        <c:icon elementId="closeAllSectionsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#dash')}" classes="closeNonApexServiceCover slds-hide slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleNonApexServiceCover()" />
+                        <c:icon elementId="openAllSectionsIcon" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#add')}" classes="openNonApexServiceCover slds-show slds-size--1-of-12 iconButton slds-icon--small icon-secondary" onclick="toggleNonApexServiceCover()" />
+                    </apex:outputPanel>
+                </span>
+            </h3>
+            <div class="slds-col slds-size--1-of-1 NonApexServicedCover slds-hide" style="padding: 10px;">
+                <apex:outputPanel rendered="{!OR(ISNULL(printOptions),AND(CONTAINS(printOptions, 'print'),CONTAINS(printOptions, 'nac')))}" layout="none"></apex:outputPanel>
+                <fieldset class="slds-box slds-container slds-m-bottom--x-small slds-size--1-of-1 slds-theme_default slds-show--inline-block pageBreakInsideAvoid slds-p-bottom--none">
+                <!-- Non Apex Cover Serviced By Apex Advice -->
+                <div class="slds-form-element__row slds-size--1-of-1" style="display: table; padding: 5px;">
+                    <div class="label slds-size--3-of-12" style="display: table-cell">Name</div>
+                    <div class="label slds-size--2-of-12" style="display: table-cell">Provider</div>
+                    <div class="label slds-size--2-of-12" style="display: table-cell">Policy Number</div>
+                    <div class="label slds-size--3-of-12" style="display: table-cell">Benefit Type</div>
+                    <div class="label slds-size--2-of-12" style="display: table-cell">Value</div>
+                </div>
+                <apex:repeat value="{!theNonApexCover}" var="nac">
+                    
+                    <div class="slds-form-element__row slds-size--1-of-1" style="display: table; padding: 5px;">
+                        <div class="slds-size--3-of-12" style="display: table-cell">
+                            <apex:outputText styleClass="slds-m-top--xx-small slds-size--3-of-12" value="{!nac.Person_Insured__r.Name}" />
+                        </div>
+                        <div class="slds-size--2-of-12" style="display: table-cell">
+                            <apex:outputText styleClass="slds-m-top--xx-small slds-size--3-of-12" value="{!nac.Provider__c}" />
+                        </div>
+                        <div class="slds-size--2-of-12" style="display: table-cell">
+                            <apex:outputText styleClass="slds-m-top--xx-small slds-size--3-of-12" value="{!nac.Policy_Number__c}" />
+                        </div>
+                        <div class="slds-size--3-of-12" style="display: table-cell">
+                            <apex:outputText styleClass="slds-m-top--xx-small slds-size--3-of-12" value="{!nac.Benefit_Type__c}" />
+                        </div>
+                        <div class="slds-size--2-of-12" style="display: table-cell">
+                            <apex:outputText styleClass="slds-size--1-of-3" value="${0, Number, ###,###,###}">
+                                <apex:param value="{!nac.Value__c}" />
+                            </apex:outputText>
+                        </div>
+                        
+                    </div>
+                
+                </apex:repeat>
+            </fieldset>     
+            </div>
+        </apex:outputPanel>
+    </div>
+
+    <!-- POPUP FOR PRINTING - Start -->
+    <apex:outputPanel id="printingOptionsDialog" styleClass="printingOptions">
+        <c:dialog name="printingOptions"
+                  title="Select what you want to print"
+                  confirmButtonLabel="Print"
+                  confirmButtonClick="printPage">
+            <div id="printingOptions" class="slds-form--compound slds-size--1-of-1 slds-grid slds-wrap">
+                <div class="slds-form-element__row slds-size--1-of-1 ">
+                    <div class="slds-m-bottom--x-small slds-size--1-of-1">
+                        <label class="slds-checkbox">
+                            <input id="selectAllOptions" class="slds-input" type="checkbox" name="selectAllOptions" onchange="selectAllPrintingOptions(this)" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="label slds-m-left--xx-small">Select All?</span>
+                    </div>
+                </div>
+                <div class="slds-form-element__row slds-size--1-of-1 ">
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printHeader" class="slds-input" type="checkbox" checked="true" name="printHeader" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Header</span>
+                    </div>
+                </div>
+                <div class="slds-form-element__row slds-size--1-of-1 ">
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printPersonalDetails" class="slds-input" type="checkbox" checked="true" name="printPersonalDetails" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Personal Details</span>
+                    </div>
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printNetWorth" class="slds-input" type="checkbox" name="printNetWorth" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Net Worth &amp; Disposable Income</span>
+                    </div>
+                </div>
+                <div class="slds-form-element__row slds-size--1-of-1 ">
+                    <!--<div class="slds-size&#45;&#45;1-of-3">
+                        <label class="slds-checkbox slds-m-top&#45;&#45;xx-small">
+                            <input id="printClientServiceAreas" class="slds-input" type="checkbox" name="printClientServiceAreas" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left&#45;&#45;xx-small slds-text-body&#45;&#45;regular">Client Service Areas</span>
+                    </div>-->
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printGoals" class="slds-input" type="checkbox" name="printGoals" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Goals</span>
+                    </div>
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printPolicySummary" class="slds-input" type="checkbox" checked="true" name="printPolicySummary" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Policy Summary</span>
+                    </div>
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printInsuranceCoverSummary" class="slds-input" type="checkbox" checked="true" name="printInsuranceCoverSummary" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Insurance Cover Summary</span>
+                    </div>
+                </div>
+                                <div class="slds-form-element__row slds-size--1-of-1 ">
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printAssets" class="slds-input" type="checkbox" name="printAssets" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Assets</span>
+                    </div>
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printLiabilities" class="slds-input" type="checkbox" name="printLiabilities" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Liabilities</span>
+                    </div>
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printIncome" class="slds-input" type="checkbox" name="printIncome" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Income</span>
+                    </div>
+                </div>
+                <div class="slds-form-element__row slds-size--1-of-1 ">
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printExpenses" class="slds-input" type="checkbox" name="printExpenses" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Expenses</span>
+                    </div>
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printPolicies" class="slds-input" type="checkbox" checked="true" name="printPolicies" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Policies</span>
+                    </div>
+                    <div class="slds-size--1-of-3">
+                        <label class="slds-checkbox slds-m-top--xx-small">
+                            <input id="printNonApexCover" class="slds-input" type="checkbox"  name="printNonApexCover" />
+                            <span class="slds-checkbox_faux"></span>
+                        </label>
+                        <span class="slds-m-left--xx-small slds-text-body--regular">Non Apex Serviced Cover</span>
+                    </div>
+                </div>
+            </div>
+        </c:dialog>
+    </apex:outputPanel>
+    <!-- END POPUP FOR PRINTING - End -->
+
+    <script>
+        $(document).ready(function () {
+            if ({!!ISNULL(printOptions)}) {
+                toggleSectionSummary(document.getElementById('#openAllSectionsIcon'), null, true);
+                togglePolicyDetails();
+                toggleNonApexServiceCover();
+                window.print();
+            }
+        });
+
+        function toggleSectionSummary(element, type, value = false) {
+            var toggleClass = 'slds-show slds-hide';
+
+            // if type is null, all the sections must be opened/closed
+            if (type !== null) {
+                // swap the buttons
+                // hide the button that we clicked
+                $(element).toggleClass(toggleClass);
+                // show the sibling
+                if ($(element).prevAll('svg').length > 0) {
+                    $(element).prevAll('svg').toggleClass(toggleClass);
+                } else {
+                    $(element).nextAll('svg').toggleClass(toggleClass);
+                }
+
+                // close the main button if one of the children are closed
+                if (!value) {
+                    $('svg.closeAll').addClass('slds-hide').removeClass('slds-show');
+                    $('svg.openAll').addClass('slds-show').removeClass('slds-hide');
+                }
+
+                // show the section and hide the sumary
+                $('#' + type + 'SummaryView').toggleClass(toggleClass);
+                $('#' + type + 'DetailView').toggleClass(toggleClass);
+            }
+            else {
+                // toggle the main button
+                $('svg.openAll').toggleClass(toggleClass);
+                $('svg.closeAll').toggleClass(toggleClass);
+
+                if (value) {
+                    $('svg.closeSection').addClass('slds-show').removeClass('slds-hide');
+                    $('svg.openSection').addClass('slds-hide').removeClass('slds-show');
+                    // open / close all the sections
+                    $('div[id*=SummaryView]').addClass('slds-hide').removeClass('slds-show');
+                    $('div[id*=DetailView]').addClass('slds-show').removeClass('slds-hide');
+                } else {
+                    $('svg.openSection').addClass('slds-show').removeClass('slds-hide');
+                    $('svg.closeSection').addClass('slds-hide').removeClass('slds-show');
+                    // open / close all the sections
+                    $('div[id*=SummaryView]').addClass('slds-show').removeClass('slds-hide');
+                    $('div[id*=DetailView]').addClass('slds-hide').removeClass('slds-show');
+                }
+            }
+        }
+
+        function togglePolicyDetails () {
+            var toggleClass = 'slds-show slds-hide';
+            $('.policyDetails').toggleClass(toggleClass);
+
+            $('svg.closePolicyDetails').toggleClass(toggleClass);
+            $('svg.openPolicyDetails').toggleClass(toggleClass);
+        }
+
+        function toggleNonApexServiceCover () {
+            var toggleClass = 'slds-show slds-hide';
+            $('.NonApexServicedCover').toggleClass(toggleClass);
+
+            $('svg.closeNonApexServiceCover').toggleClass(toggleClass);
+            $('svg.openNonApexServiceCover').toggleClass(toggleClass);
+        }
+
+        
+
+        function selectAllPrintingOptions (element) {
+            const value = element.checked;
+
+            $(".printingOptions").find('*input[id*=print]').each((index,el) => {
+                $(el).prop("checked", value);
+            });
+        }
+
+        function printPage () {
+            var url = '{!baseUrl}' + '/apex/FactFindingSummary?id={!mainAccountId}&print';
+
+            // get the values
+            url += $('#printHeader').prop('checked') ? '&he' : '';
+            url += $('#printPersonalDetails').prop('checked') ? '&pd' : '';
+            url += $('#printNetWorth').prop('checked') ? '&nwdi' : '';
+            // url += $('#printClientServiceAreas').prop('checked') ? '&csa' : '';
+            url += $('#printGoals').prop('checked') ? '&gl' : '';
+            url += $('#printPolicySummary').prop('checked') ? '&ps' : '';
+            url += $('#printInsuranceCoverSummary').prop('checked') ? '&ics' : '';
+            url += $('#printNonApexCover').prop('checked') ? '&nac' : '';
+            url += $('#printAssets').prop('checked') ? '&as' : '';
+            url += $('#printLiabilities').prop('checked') ? '&li' : '';
+            url += $('#printIncome').prop('checked') ? '&io' : '';
+            url += $('#printExpenses').prop('checked') ? '&ex' : '';
+            url += $('#printPolicies').prop('checked') ? '&po' : '';
+
+            closeDialogprintingOptions();
+            window.open(url, "_blank");
+        }
+    </script>
+</apex:component>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="picklistsAsOptions">
+    <apiVersion>46.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Picklist Fields as Options Component</masterLabel>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <property name="fieldNames" description="Field API Names of the fields to render. Could be more than one field split by ," label="Field Names" required="true" placeholder="e.g. Kiwisaver_Providers__c,Services__c" type="String"/>
+            <property name="sectionLabels" description="Labels to show in each section/field. Could be more than one labels split by , (it should be in the same order of the fieldNames string). If null then the Field Labels will be displayed" label="Section Labels" placeholder="e.g. Kiwisaver,Services" type="String"/>
+            <property name="defaultChecked" description="Which values should be checked by default on new Records. Set each field check split by , (it should be in the same order of the fieldNames string) and the value separated by a :. If null everything will be unchecked. Use the 'all' word for checking all" label="Checked by Default" placeholder="e.g. Kiwisaver_Providers__c:all,Services__c:Option1:Option2" type="String"/>
+            <property name="saveEnabled" description="If the component has the save and cancel button enabled" label="Is Save Enabled?" type="Boolean" default="true"/>
+            <property name="saveButtonLabel" description="Label for the Save button" label="Save Button Label" type="String" default="Save"/>
+            <property name="saveButtonVariant" description="Colour for the Save button" label="Colour for the Save button" type="String" default="brand"/>
+            <property name="resetEnabled" description="If the component has the reset button enabled" label="Is Reset Enabled?" type="Boolean" default="true"/>
+            <property name="allowSelectAll" description="If the component allow the select all option for Multi PickLists" label="Is Select All Enabled?" type="Boolean" default="true"/>
+            <property name="selectAllLabel" description="Label to use next to the Select All checkbox, if enabled." label="Select All Label" type="String" default="Select All?"/>
+            <property name="validateLastModifiedDate" description="Should the save validate the last modified date of the record?" label="Validate Last Modified Date?" type="Boolean" default="false"/>
+            <property name="extraFieldName" description="Field API Name to show next to the buttons. E.g. use it for add a checkbox for I agree..." label="Extra Field Name" type="String"/>
+            <property name="extraFieldLabel" description="Label to show next to the extra field. If null then the Field Label will be displayed" label="Extra Field Label" placeholder="e.g. I {{Opportunity.Owner.Name}} agree..." type="String"/>
+            <!-- FLOW BUTTON --><property name="showFlowButton" description="Show Flow Button?" label="Show Flow Button?" type="Boolean" default="false"/>
+            <property name="flowButtonLabel" description="Label for the Flow button" label="Flow Button Label" default="Open Flow" type="String"/>
+            <property name="flowButtonVariant" description="Colour for the Flow button" label="Colour for the Flow button" datasource="base,neutral,brand,destructive,inverse,success" default="neutral" type="String"/>
+            <!-- CONGA BUTTON --><property name="showCongaButton" description="Show Conga button?" label="Show Conga Button?" default="false" type="Boolean"/>
+            <property name="congaButtonLabel" description="Label of the Conga Button to show" label="Conga Button Label" placeholder="e.g. Send Document" default="" type="String"/>
+            <property name="congaButtonVariant" description="Variant of the Conga Button (possible values are base, neutral, brand, destructive or success)" placeholder="e.g. brand" label="Conga Button Variant" default="" type="String"/>
+            <property name="congaTemplates" description="Conga Template of the button" label="Conga Templates" type="String" default=""/>
+            <property name="congaQueries" description="Conga Queries of the button" label="Conga Queries" type="String" default=""/>
+            <property name="congaAttributes" description="Other Attributes for Conga" label="Attributes for Conga" placeholder="e.g. &amp;DefaultPDF=1&amp;DS7=0&amp;DS7Preview=1" type="String" default=""/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

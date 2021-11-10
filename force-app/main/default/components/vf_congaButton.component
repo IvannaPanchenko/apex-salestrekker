@@ -1,0 +1,35 @@
+<apex:component id="vf_congaButton" layout="none">
+    <apex:attribute name="containerId" type="String" required="true" description="The Id of the container" />
+    <apex:attribute name="recordId" type="String" required="true" description="The Id of the record" />
+    <apex:attribute name="objectName" type="String" required="true" description="The Api name of the object of the record" />
+    <apex:attribute name="buttonLabel" type="String" description="Label of the Button to show" default="Open Conga Composer" />
+    <apex:attribute name="buttonVariant" type="String" description="Variant of the Button (possible values are base, neutral, brand, destructive or success)" default="neutral" />
+    <apex:attribute name="buttonDisabled" type="Boolean" description="Is the button disabled or not" default="false" />
+    <apex:attribute name="congaTemplates" type="String" required="true" description="Templates for Conga" />
+    <apex:attribute name="congaQueries" type="String" required="true" description="Queries for Conga" />
+    <apex:attribute name="congaAttributes" type="String" required="true" description="Attributes for Conga" />
+
+    <apex:includeLightning />
+    
+    <span id="container-{!containerId}"></span>
+
+    <script>
+        $Lightning.use("c:aura_MainApp", function() {
+            $Lightning.createComponent(
+                "c:congaButton",
+                {
+                    "recordId": "{!recordId}",
+                    "objectApiName": "{!objectName}",
+                    "buttonLabel": "{!buttonLabel}",
+                    "buttonVariant": "{!buttonVariant}",
+                    "buttonDisabled": {!buttonDisabled},
+                    "congaTemplates": "{!congaTemplates}",
+                    "congaQueries": "{!congaQueries}",
+                    "congaAttributes": "{!congaAttributes}"
+                },
+                "container-{!containerId}",
+                function(cmp) {});
+        });
+    </script>
+
+</apex:component>

@@ -1,0 +1,93 @@
+<template>
+    <template if:true={canEdit}>
+        <div class="data-template" if:false={hasLoaded}></div>
+        <div style="width:100%;" class="tooltip"> 
+            <lightning-record-edit-form id={formId} class={formClasses} record-id={record.Id} object-api-name={objectName} onload={handleOnLoad} onerror={handleError}>
+                <template if:false={isSaving}>
+                    <lightning-messages></lightning-messages>
+                </template>
+                <template if:true={isEditableField}>
+                    <!-- <lightning-input-field field-name={field.fieldName} variant="label-hidden" onchange={handleChangeInput}>
+                    </lightning-input-field>   -->
+                    <template if:false={isPickList}>
+                        <template if:false={isTextarea}>
+                            <lightning-input-field field-name={field.fieldName} variant="label-hidden" onchange={handleChangeInput}></lightning-input-field>
+                        </template>
+                        <template if:true={isTextarea}> 
+                        <!-- <lightning-textarea value={cbtaValue} onchange={handleChangeInputCBTA} variant="label-hidden" style="resize: horizontal;" ></lightning-textarea>-->
+
+                        <textarea  id={field.fieldName} class="slds-textarea" onchange={handleChangeInputCBTA} style="resize: both;" rows="3" cols="100" >{cbtaValue}</textarea>
+
+                            <lightning-input-field field-name={field.fieldName} variant="label-hidden" onchange={handleChangeInputCBTA} value={cbtaValue} style="display: none;">
+                            </lightning-input-field>
+
+                        </template>
+                    </template>
+                    <template if:true={isPickList}>
+                        <lightning-combobox field-name={field.fieldName} variant="label-hidden" options={options} onchange={handleChangeInputCBTA} value={cbtaValue} style="width:125px;"></lightning-combobox>
+
+                        <lightning-input-field field-name={field.fieldName} variant="label-hidden" onchange={handleChangeInputCBTA} value={cbtaValue} style="display: none;">
+                        </lightning-input-field>
+
+                    </template> 
+                </template>
+                <template if:false={isEditableField}>   
+                    <template if:false={field.isNameField}>
+                        <template if:true={isHyperLink}>
+                            <lightning-formatted-rich-text value={valueFieldToShow}></lightning-formatted-rich-text>
+                        </template>
+                        <template if:false={isHyperLink}>
+                            <lightning-output-field class="slds-p-around--none slds-m-around--none" field-name={field.fieldName} variant="label-hidden" ></lightning-output-field>
+                        </template>
+                    </template>
+                    <template if:true={field.isNameField}>
+                        <c-navigation-link record-id={record.Id}>
+                            <lightning-output-field class="slds-p-around--none slds-m-around--none" field-class="slds-text-link " field-name={field.fieldName} variant="label-hidden" ></lightning-output-field>
+                        </c-navigation-link>
+                    </template>
+                </template>
+                <template if:false={record.Id}>
+                    <lightning-input-field field-name={relatedField} value={parentId} class="slds-hidden"></lightning-input-field>
+                </template>
+            </lightning-record-edit-form>
+            <span class="tooltiptext">{field.label}</span>
+        </div>
+    </template>
+    <template if:false={canEdit}>
+        <template if:false={field.isNameField}>
+                <template if:false={isReferenceField}>
+                    <template if:true={isNumberField}>
+                        <lightning-formatted-number value={valueFieldToShow} format-style={field.type} currency-code="NZD" maximum-fraction-digits="2" currency-display-as="symbol"></lightning-formatted-number>
+                    </template>
+                    <template if:false={isNumberField}>
+                        <template if:true={isDateField}>
+                            <lightning-formatted-date-time value={valueFieldToShow} year="numeric" month="numeric" day="numeric"></lightning-formatted-date-time>
+                        </template>
+                        <template if:false={isDateField}>
+                            <template if:false={isHyperLink}> 
+                                <template if:false={isLongValue}>
+                                    <span class="slds-p-around--none slds-m-around--none" style="word-wrap: break-word; display: inline-block;">{valueFieldToShow}</span>
+                                </template>
+                                <template if:true={isLongValue}>
+                                    <textarea class="longValContainer" name="longValContainer" rows="3" cols="70" readonly>{valueFieldToShow}</textarea>                    
+                                </template>  
+                            </template> 
+                            <template if:true={isHyperLink}>
+                                <lightning-formatted-rich-text value={valueFieldToShow}></lightning-formatted-rich-text>
+                            </template>
+                        </template>
+                    </template>
+                </template>
+                <template if:true={isReferenceField}>
+                    <c-navigation-link record-id={referenceIdField}>
+                        <span class="slds-p-around--none slds-m-around--none">{valueFieldToShow}</span>
+                    </c-navigation-link>
+                </template>
+         </template>
+        <template if:true={field.isNameField}>
+                <c-navigation-link record-id={record.Id}>
+                    <span class="slds-p-around--none slds-m-around--none">{valueFieldToShow}</span>
+                </c-navigation-link>
+        </template>
+    </template>
+</template>

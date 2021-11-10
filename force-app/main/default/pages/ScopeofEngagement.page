@@ -1,0 +1,605 @@
+<apex:page standardController="Opportunity" extensions="ScopeofEngagementController" showHeader="false" sidebar="false" docType="html-5.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" lang="en">
+        <head>
+            <title>Scope of Engagement</title>
+            <apex:slds />
+        </head>
+        <body class="slds-scope">
+        <div class="slds-spinner_container slds-hide">
+            <div class="slds-spinner slds-spinner_brand slds-spinner_medium" aria-hidden="false" role="alert">
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+    
+        <!-- Form Main -->
+        <apex:form enctype="multipart/form-data" id="mainForm">
+            <div id="pageMessages">
+                <apex:repeat value="{!allPageMessagesMap}" var="alertTheme">
+                    <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_{!alertTheme}" role="alert">
+                        <span class="slds-assistive-text">{!alertTheme}</span>
+                        <h2 class="slds-text-heading_small"> 
+            			    <apex:repeat value="{!allPageMessagesMap[alertTheme]}" var="message">
+            					<apex:outputText value="{!message}" escape="false" /><br/>
+            				</apex:repeat>
+            			</h2>
+            		</div>
+            	</apex:repeat>
+            </div>
+            <div class="slds-form slds-form_compound">
+                <fieldset class="slds-box slds-theme_default slds-container slds-form-element" style="margin-bottom: 15px;">
+                    <legend class="slds-form-element__label slds-text-title_caps">Services</legend>
+                    <div class="slds-form-element__group">
+                        <div class="slds-form-element__row">
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Personal Risk Management</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!service.riskManagement}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Business Insurance</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!service.businessInsurance}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Health Insurance</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!service.healthInsurance}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element__row">
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Investment Planning</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!service.investmentPlanning}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Retirement Planning</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!service.retirementPlanning}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">KiwiSaver</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!service.kiwiSaver}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element__row">
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Mortgage</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!service.mortgage}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset class="slds-box slds-theme_default slds-container slds-form-element" style="margin-bottom: 15px;">
+                    <legend class="slds-form-element__label slds-text-title_caps">Product Providers</legend>
+                    <fieldset class="slds-box slds-theme_default slds-container" style="margin-bottom: 10px;">
+                        <legend class="slds-form-element__label slds-text-title_caps">Risk</legend>
+                        <div class="slds-form-element__group">
+                            <div class="slds-form-element__row">
+                                <!--<div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Sovereign</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.riskSovereign}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>-->
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">AMP</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.amp}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">AIA</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.aia}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Asteron</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.asteron}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Fidelity</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.fidelity}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Cigna</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.Cigna}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">NIB</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.nib}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Partners Life</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.partnersLife}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="slds-box slds-theme_default slds-container" style="margin-bottom: 10px;">
+                        <legend class="slds-form-element__label slds-text-title_caps">KiwiSaver</legend>
+                        <div class="slds-form-element__group">
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">OneAnswer</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.oneAnswer}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Booster</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.booster}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Fisher Funds</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.fisherFunds}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Generate</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.generate}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">AON</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.aon}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Other</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.other}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="slds-box slds-theme_default slds-container" style="margin-bottom: 10px;">
+                        <legend class="slds-form-element__label slds-text-title_caps">Investments</legend>
+                        <div class="slds-form-element__group">
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Select Wealth Management</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.swm}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">iSelect</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.iSelect}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Synergy</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.synergy}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Consilium</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.consilium}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="slds-box slds-theme_default slds-container" style="margin-bottom: 10px;">
+                        <legend class="slds-form-element__label slds-text-title_caps">Mortgage</legend>
+                        <div class="slds-form-element__group">
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Sovereign</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.mortgageSovereign}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">ASB</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.asb}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Co-Operative Bank</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.cooperativeBank}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Westpac</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.westpac}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">TSB</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.tsb}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Liberty Financial</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.liberty}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">ANZ</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.anz}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">BNZ</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.bnz}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">Resimac</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.resimac}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element__row">
+                                <div class="slds-size_1-of-6">
+                                    <label class="slds-form-element__label">SBS</label>
+                                </div>
+                                <div class="slds-size_1-of-6">
+                                   <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!provider.sbs}"/>
+                                        <span class="slds-checkbox_faux"></span>   
+                                    </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </fieldset>
+                <fieldset class="slds-box slds-theme_default slds-container slds-form-element">
+                    <legend class="slds-form-element__label slds-text-title_caps">Benefits</legend>
+                    <div class="slds-form-element__group">
+                        <div class="slds-form-element__row">
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Life Cover</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!benefit.lifeCover}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Trauma Cover</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!benefit.traumaCover}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Total Permanent Disablement</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!benefit.tpd}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element__row">
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Income Protection</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!benefit.incomeProtection}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Mortgage Protection</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!benefit.mortgageProtection}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Health Insurance</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!benefit.healthInsurance}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Redundancy Cover</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                                <div class="slds-form-element__control">
+                                    <label class="slds-checkbox">
+                                        <apex:inputCheckbox styleClass="slds-input" value="{!benefit.redundancyCvr}"/>
+                                        <span class="slds-checkbox_faux"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element__row">
+                            <div class="slds-size_1-of-6">
+                                <label class="slds-form-element__label">Waiver of Premium</label>
+                            </div>
+                            <div class="slds-size_1-of-6">
+                               <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox styleClass="slds-input" value="{!benefit.wop}"/>
+                                    <span class="slds-checkbox_faux"></span>   
+                                </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </fieldset>
+                <apex:commandButton action="{!saveRecord}" value="Save" styleClass="slds-button slds-button_brand slds-float_right" title="Save" style="margin-top: 10px;" onclick="showSpinner();"/>
+                <apex:commandButton action="{!initialize}" styleClass="slds-button slds-button_neutral slds-float_right" value="Refresh" onclick="showSpinner();" title="Refresh" style="margin-top: 10px; margin-right: 5px;"/>
+            </div>
+        </apex:form>
+        
+        <script>
+        
+        setTimeout(function() { $('#pageMessages').fadeOut('slow'); }, 10000);
+        
+        if({!refreshRecord}){
+            refreshRecordDetailPage();
+        }
+        
+        function showSpinner() {
+            $('.slds-spinner_container').removeClass('slds-hide');
+            $('.slds-spinner_container').addClass('slds-show');
+            
+            var winWidth = $(document).width();
+    		var winHeight = $(document).height();
+    		 
+    		$('.slds-spinner_container').css({ 'width': winWidth,'height': winHeight });
+        }
+        
+        function refreshRecordDetailPage(){
+            parent.postMessage(JSON.stringify({
+                'recordId'  : '{!$CurrentPage.parameters.id}',
+                'action' : 'refresh'
+            }), "*" );
+        }
+         
+        </script>
+        </body>
+    </html>
+</apex:page>

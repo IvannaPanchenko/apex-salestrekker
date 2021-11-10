@@ -1,0 +1,53 @@
+<!--
+ - Created by pablomartinez on 19/10/2019.
+ -->
+
+<apex:page id="AccountBillingAddress" standardController="Account">
+    <style>
+        .slds-iframe-container iframe {
+            display: block !important;
+            border: none;
+            margin-top: 15px;
+        }
+
+        .accountTab {
+            padding-top: 0 !important;
+        }
+
+        .viewMode {
+            min-height: 250px;
+        }
+
+        .viewMode, lightning-button-group {
+            margin-left: -20px;
+            border-bottom: var(--lwc-borderWidthThin,1px) solid var(--lwc-colorBorder,rgb(221, 219, 218));
+            margin-right: -20px;
+            padding-bottom: 25px;
+        }
+
+        lightning-button-group {
+            padding-bottom: 3px;
+        }
+
+        textarea {
+            height: 38px !important;
+        }
+    </style>
+    <apex:form >
+        <c:vf_nzPostAddress containerId="accountBillingAddress"
+                            recordId="{!Account.Id}"
+                            objectApiName="Account"
+                            showMap="true"
+                            showButtons="true"
+                            internationalSearch="true"
+                            showAustraliaAsOption="true"
+                            editEnabled="true"
+                            labelToShow="Postal Address"
+                            streetFieldName="BillingStreet"
+                            suburbFieldName="BillingCity"
+                            countryFieldName="BillingCountry"
+                            cityFieldName="BillingState"
+                            postalCodeFieldName="BillingPostalCode"
+        />
+    </apex:form>
+</apex:page>

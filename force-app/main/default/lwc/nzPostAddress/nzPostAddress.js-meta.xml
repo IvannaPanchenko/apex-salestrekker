@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="nzPostAddress">
+    <apiVersion>46.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>NZ Post Address Finder</masterLabel>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <property name="labelToShow" description="Label of the Main Field" label="Main Field Label" placeholder="e.g. Billing Address" type="String" required="true" default="" />
+            <property name="streetField" description="API name of the Street Field" label="Street Field" type="String" placeholder="e.g. BillingStreet" required="true" default="" />
+            <property name="suburbField" description="API name of the Suburb Field" label="Suburb Field" type="String" placeholder="e.g. BillingCity" required="true" default="" />
+            <property name="cityField" description="API name of the City Field" label="City Field" type="String" placeholder="e.g. BillingState" required="true" default="" />
+            <property name="postalCodeField" description="API name of the Postal Code Field" label="Postal Code Field" type="String" placeholder="e.g. BillingPostalCode" required="true" default="" />
+            <property name="countryField" description="API name of the Country Field" label="Country Field" type="String" placeholder="e.g. BillingCountry" required="true" default="" />
+            
+            <property name="showMap" description="Show a static map of the address" label="Show Map?" type="Boolean" default="true" />
+            
+            <property name="editEnabled" description="Is the edition of the field enabled?" label="Allow edition?" type="Boolean" default="true" />
+            <property name="editAlwaysEnabled" description="Is the edition always enabled?" label="Edit always enabled?" type="Boolean" default="false" />
+            <property name="internationalSearch" description="Is the international search enabled?" label="Also search International addresses?" type="Boolean" default="false" />
+            <property name="showAustraliaAsOption" description="Show Australia as another option? (Other Countries will also search in Australia but if you want an option to search only in Australia check this box)" label="Add Australia as option?" type="Boolean" />
+            <property name="showButtons" description="Show the Save and Cancel buttons?" label="Show Buttons?" type="Boolean" default="true" />
+            <property name="qtyRecordsToShow" description="Quantity of records to show when searching." label="How many records to show on search?" type="Integer" default="5" required="true" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

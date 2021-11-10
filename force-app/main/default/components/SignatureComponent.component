@@ -1,0 +1,153 @@
+<apex:component controller="SignatureComponentController">
+    <apex:attribute name="OpptyId" type="Id" description="The current opportunity" required="true"/>
+    <apex:attribute name="CanvasId" type="String" description="Element Id of the canvas" required="true" assignTo="{!canvasName}"/>
+    <apex:attribute name="SignatureName" type="String" description="Name of the signature record." required="true" assignTo="{!signature_Name}"/>
+    <apex:slds />
+    <div>
+        <div id="{!canvasName}_canvas" class="slds-align_absolute-center"> 
+            <canvas id="{!canvasName}" style="border: 1px solid #d8dde6; border-radius: .25rem;"/>
+        </div>
+        <div class="slds-align_absolute-center slds-grid" style="margin-top:10px;">
+            <button id="clear-{!canvasName}" onclick="clearArea('{!canvasName}'); return false;" class="slds-button slds-button_brand active-btn" title="Clear Signature">Clear Area</button>
+            <input id="saveSigButton-{!canvasName}" type="button" name="SigCap" onclick="saveSignature('{!canvasName}', '{!signature_Name}');" class="slds-button slds-button_brand active-btn" value="Capture Signature" title="Save Signature"></input>
+        </div>
+    </div>
+    <script>
+    
+    var canvas;
+    var context;
+    var drawingUtil;
+    var isDrawing = false;
+    var opptyId = '{!OpptyId}';
+    var mousePressed = false;
+    var lastX, lastY;
+    var hasSignature = false;
+    
+    canvas = document.getElementById("{!canvasName}");
+    context = canvas.getContext("2d");
+    drawingUtil = new DrawingUtil(canvas);
+    
+    $(document).ready(function() {
+        
+        document.getElementById("{!canvasName}").width = document.getElementById("{!canvasName}_canvas").offsetWidth/2;
+        document.getElementById("{!canvasName}").height = document.getElementById("{!canvasName}_canvas").offsetHeight*2;
+
+        $('#{!canvasName}').mousedown(function (e) {
+            canvas = document.getElementById("{!canvasName}");
+            context = canvas.getContext("2d");   
+            mousePressed = true;
+            Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, false);
+        });
+
+        $('#{!canvasName}').mousemove(function (e) {
+            if (mousePressed) {
+                Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, true);
+            }
+        });
+
+        $('#{!canvasName}').mouseup(function (e) {
+            mousePressed = false;
+        });
+ 
+        $('#{!canvasName}').mouseleave(function (e) {
+            mousePressed = false;
+        });
+    })
+
+    function DrawingUtil() {
+        isDrawing = false;
+        
+        canvas.addEventListener("touchstart", start, false);
+        canvas.addEventListener("touchmove", draw, false);
+        canvas.addEventListener("touchend", stop, false);
+    }
+
+    //Start Event for Signature Captuare on HTML5 Canvas
+    function start(event) {
+        
+        isDrawing = true;
+        canvas = document.getElementById("{!canvasName}");
+        context = canvas.getContext("2d");
+        context.strokeStyle = "black";      
+        context.lineWidth = "3";
+        context.lineJoin = "round";
+        context.beginPath();
+        //context.moveTo(event.touches[0].pageX - canvas.getBoundingClientRect().left, event.touches[0].pageY - canvas.getBoundingClientRect().top);
+        context.moveTo(event.touches[0].pageX - $(this).offset().left, event.touches[0].pageY - $(this).offset().top);
+    }
+
+    //Event while someone is drawing to caputre the path while they draw....
+    function draw(event) {
+        event.preventDefault();
+        if(isDrawing) {     
+            //context.lineTo(event.touches[0].pageX - canvas.getBoundingClientRect().left, event.touches[0].pageY - canvas.getBoundingClientRect().top);
+            context.lineTo(event.touches[0].pageX - $(this).offset().left, event.touches[0].pageY - $(this).offset().top);
+            context.stroke();
+            // Set to true to determine something is drawn
+            hasSignature = true;
+        }
+    }
+
+    //Event when someone stops drawing their signature line
+    function stop(event) {
+        if(isDrawing) {
+            context.stroke();
+            context.closePath();
+            isDrawing = false;
+        }
+    }
+
+    function Draw(x, y, isDown) {
+        if(isDown) {
+            context.beginPath();
+            context.strokeStyle = "black";
+            context.lineWidth = "3";
+            context.lineJoin = "round";
+            context.moveTo(lastX, lastY);
+            context.lineTo(x, y);
+            context.closePath();
+            context.stroke();
+            // Set to true to determine something is drawn
+            hasSignature = true;
+        }
+        
+        lastX = x; lastY = y;
+    }
+ 
+    function clearArea(canvasName) {
+        // Use the identity matrix while clearing the canvas
+        canvas = document.getElementById(canvasName);
+        context = canvas.getContext("2d");    
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+        hasSignature = false;
+    }
+
+    function saveSignature(canvasName, signatureName) {
+        
+        // Pop up an error ig there is no signature to capture
+        if(!hasSignature){
+            alert('No signature to capture!');
+        } else {
+            canvas = document.getElementById(canvasName);
+            var strDataURI = canvas.toDataURL();
+            strDataURI = strDataURI.replace(/^data:image\/(png|jpg);base64,/, "");
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.SignatureComponentController.uploadSignature}', strDataURI, opptyId, signatureName,
+                function(result, event){
+                    console.log(result);
+                    console.log(event);
+                    if(!!result && event.status){
+                        var res = JSON.parse(result);
+                        alert(res.message);    
+                        ReloadSignature();
+                    } else {
+                        alert('Error encountered while uploading signature.');
+                    }
+            },{escape: false});
+        }
+    }
+
+    </script>
+
+</apex:component>

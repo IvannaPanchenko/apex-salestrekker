@@ -1,0 +1,148 @@
+<template>
+    <template if:false={gettingToken}>
+        <template if:false={isEditing}>
+            <div class="slds-form-element slds-grid viewMode">
+                <div class="slds-form-element__label slds-size--1-of-3">
+                    {labelToShow}
+                </div>
+                <div class="slds-form-element__control slds-grid slds-size--2-of-3">
+                    <lightning-formatted-address
+                        class="slds-size--11-of-12"
+                        street={streetToShow}
+                        city={suburbToShow}
+                        country={countryToShow}
+                        province={cityToShow}
+                        show-static-map={showMap}
+                        postal-code={postalCodeToShow}>
+                    </lightning-formatted-address>
+                    <template if:true={editEnabled}>
+                        <lightning-button-icon icon-name="utility:edit" variant="container" alternative-text="Settings" onclick={handleToggleEdit}></lightning-button-icon>
+                    </template>
+                </div>
+            </div>
+        </template>
+        
+        <template if:true={isEditing}>
+            <template if:true={error}>
+                <span class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    {error}
+                </span>
+            </template>
+            <template if:true={isSaving}>
+                <lightning-spinner variant="brand" alternative-text="Loading"></lightning-spinner>
+            </template>
+            <template if:true={finishLoaded}>
+                <div class="slds-grid slds-wrap">
+                    <template if:true={internationalSearch}>
+                        <div class="slds-size--2-of-7">    
+                            <lightning-combobox
+                                name="typeSearch"
+                                variant="label-hidden"
+                                value={searchType}
+                                options={searchTypeOptions}
+                                onchange={handleSelectSearchType}>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+                    <div class={inputSearchClasses}>
+                        <div class="slds-form-element__control">
+                            <div class="slds-combobox_container">
+                                <div class={dropdownClasses} data-id="resultBox" aria-expanded="false" aria-haspopup="listbox" role="combobox">
+                                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon slds-input-has-icon_left-right" role="none">
+                                        <lightning-input 
+                                            name="search"
+                                            class="slds-form-element slds-grid slds-m-bottom--xx-small slds-p-left--xx-small slds-p-right--xx-small" 
+                                            placeholder="Type to search for addresses..." 
+                                            variant="label-hidden" 
+                                            type="search" 
+                                            onchange={handleSearch} 
+                                            value={searchText}>
+                                        </lightning-input>
+                                    </div>
+                                
+                                    <!-- Display search Results -->
+                                    <div id="searchResults" class="slds-dropdown slds-dropdown_length-with-icon-7 slds-dropdown_fluid" role="listbox">
+                                        <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                            <template if:true={searchedResults.length}>
+                                                <template for:each={searchedResults} for:item="address">
+                                                    <li role="presentation" class="slds-listbox__item" key={address.address_id}>
+                                                        <div data-id={address.address_id} onclick={handleSelectAddress} class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta" role="option">
+                                                            <span class="slds-listbox__option-text slds-listbox__option-text_entity slds-p-around--xx-small">{address.full_address}</span>
+                                                        </div>
+                                                    </li>
+                                                </template>
+                                            </template>
+                                            <template if:true={noRecordsFound}>
+                                                <li role="presentation" class="slds-align--absolute-center slds-listbox__item">
+                                                    <div class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta" role="option">
+                                                        <span class="slds-listbox__option-text slds-listbox__option-text_entity slds-p-around--xx-small">No result found.</span>
+                                                    </div>
+                                                </li>
+                                            </template>
+                                            <template if:true={loadingAddresses}>
+                                                <li role="presentation" class="slds-align--absolute-center slds-listbox__item">
+                                                    <div class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta" role="option">
+                                                        <span class="slds-listbox__option-text slds-listbox__option-text_entity slds-p-around--xx-small">Loading...</span>
+                                                    </div>                                                    
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>      
+                </div> 
+            </template>     
+
+            <div class="slds-form-element slds-grid">
+                <lightning-record-edit-form id="address" record-id={recordId} object-api-name={objectApiName} onsubmit={handleSave} onsuccess={handleSaveSuccess} onload={handleOnLoad}>
+                    <template if:false={finishLoaded}>
+                        <lightning-card title="Loading form. Please wait..." icon-name="utility:spinner">
+                            <lightning-spinner
+                                variant="brand"
+                                alternative-text="Loading"
+                            ></lightning-spinner>
+                        </lightning-card>
+                    </template>
+                    <template if:true={finishLoaded}>
+                        <template if:false={isSaving}>
+                            <lightning-messages></lightning-messages>
+                        </template>
+
+                        <div class="slds-grid slds-wrap">
+                            <lightning-input-field class="slds-size--1-of-1 slds-m-bottom--none" data-name="Street" variant="label-stacked" field-name={streetField} onchange={handleChangeInput} value={streetToShow}></lightning-input-field>
+                            <lightning-input-field class="slds-size--1-of-2 slds-m-bottom--none" style="max-width: 50%;" data-name="Suburb" variant="label-stacked" field-name={suburbField} onchange={handleChangeInput} value={suburbToShow}></lightning-input-field>
+                            <lightning-input-field class="slds-size--1-of-2 slds-m-bottom--none" style="max-width: 50%;" data-name="City" variant="label-stacked" field-name={cityField} onchange={handleChangeInput} value={cityToShow}></lightning-input-field>
+                            <lightning-input-field class="slds-size--1-of-2 slds-m-bottom--none" style="max-width: 50%;" data-name="Country" variant="label-stacked" field-name={countryField} onchange={handleChangeInput} value={countryToShow}></lightning-input-field>
+                            <lightning-input-field class="slds-size--1-of-2 slds-m-bottom--none" style="max-width: 50%;" data-name="PostalCode" variant="label-stacked" field-name={postalCodeField} onchange={handleChangeInput} value={postalCodeToShow}></lightning-input-field>
+                        </div>
+                        
+                        <template if:true={showButtons}>
+                            <lightning-button-group class="slds-align--absolute-center slds-button-group slds-m-top--xx-small">
+                                <lightning-button
+                                    label="Save"
+                                    variant="brand"
+                                    disabled={isNotChanged}
+                                    type="submit">
+                                </lightning-button>
+                                <lightning-button
+                                    label="Cancel"
+                                    onclick={handleCancel}>
+                                </lightning-button>
+                            </lightning-button-group>
+                        </template>
+                    </template>
+                </lightning-record-edit-form>
+            </div>
+        </template>
+    </template>
+    <template if:true={gettingToken}>
+        <lightning-card title="Getting NZ Post Authorization Token. Please wait..." icon-name="utility:spinner">
+            <lightning-spinner
+                variant="brand"
+                alternative-text="Loading"
+            ></lightning-spinner>
+        </lightning-card>
+    </template>
+</template>

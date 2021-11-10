@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="enhancedRelatedList">
+    <apiVersion>46.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Enhanced Related List Component</masterLabel>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <property name="objectName" description="Object API Name" label="Object Name" required="true" placeholder="e.g. Contact" type="String"/>
+            <property name="customTitle" description="Custom Lightning Card Title, default title will be set to the Plural Label of the Object" label="Custom Title" placeholder="e.g. All Contacts" type="String"/>
+            <property name="iconName" description="Enter a valid icon name to display from SLDS" label="Icon Name" placeholder="e.g. standard:contact" type="String"/>
+            <property name="iconFullURL" description="Enter a valid icon full URL for the icon" label="Icon Full URL" type="String"/>
+            <property name="relatedField" description="Related Field in the Object that references the parent. If you don't specified a related field, it will use the first one that finds for that parentId." label="Related Field" placeholder="e.g. AccountId" type="String"/>
+            <property name="fieldSetName" description="Fieldset API Name of the object, if not specified will only render the Name Field and required fields" label="Fieldset Name" placeholder="e.g. FieldSetForContact" type="String"/>
+            <property name="selectedFields" description="Add a list of comma separated fields to be queried from the object, can be an aggregate SOQL. For aggregate fields add custom label with quote marks and do not include aliases. Cannot be used in conjunction with fieldSetName." label="Selected Fields" placeholder="e.g. Name, FORMAT(MAX(CreatedDate)) ''Max Created Date''" type="String"/>
+            <property name="editableFields" description="Add a list of comma separated fields that can be edited. If blank, all fields are editabled" label="Editable Fields" placeholder="e.g. Name, Description__c" type="String"/>
+            <property name="whereCondition" description="Enter a custom WHERE condition here. Note that the WHERE condition will cause new records to be re-evaluated after save. When a custom WHERE condition is set the related Id will not be included and it is up to the user to include it. Merge fields are allowed as long as they start with '{{ ' and end with ' }}'." label="WHERE Condition" placeholder="e.g. AccountId = {{ Id }} OR Account.Type = {{ Account.Type }}" type="String"/>
+            <property name="groupBy" description="Group by columns, any aggregate query will not allow creating, updating or deleting records. Cannot be used in conjunction with fieldSetName." label="Group By" placeholder="e.g. Name" type="String"/>
+            <property name="orderBy" description="Order by for the default order of the results in the table. If you don't specified an order by, it will be ordered by the Name Field of the object." label="Order By" placeholder="e.g. Name ASC" type="String"/>
+            <property name="recordLimit" description="Limit the amount of records shown" label="Record Limit" min="1" max="10000" default="10000" required="true" type="Integer"/>
+            <property name="allowCreate" description="Allow creating new records. Note that if a WHERE condition is set, the new records will be re-evaluated after being saved. Cannot be used in conjunction with aggregate queries." label="Allow Create" default="true" type="Boolean"/>
+            <property name="allowEdit" description="Allow editing fields that are editable. Cannot be used in conjunction with aggregate queries." label="Allow Edit" default="true" type="Boolean"/>
+            <property name="showEditButton" description="Show an edit button instead of making rows editable by default. Cannot be used in conjunction with aggregate queries." label="Show Edit Button" default="true" type="Boolean"/>
+            <property name="allowDelete" description="Allow deleting records. Cannot be used in conjunction with aggregate queries." label="Allow Delete" default="true" type="Boolean"/>
+            <property name="showIconButtons" description="Show icon buttons instead of text buttons." label="Show Icon Buttons" default="true" type="Boolean"/>
+            <property name="allowSearch" description="Allow searching or filtering the returned record set." label="Allow search" default="true" type="Boolean"/>
+            <property name="recordsPerPage" description="Amount of records to be displayed per page." label="Records Per Page" default="5" type="Integer"/>
+            <property name="showPaginationPicker" description="Show dropdown of common records per page options, above number will be selected by default." label="Show Pagination Picker" default="true" type="Boolean"/>
+            <property name="chartType" description="Type of chart to render, visit chartjs.org for more information on each chart type." label="Chart Type" default="bar" datasource="line,bar,radar,doughnut,pie,polarArea" type="String"/>
+            <property name="customChartTitle" description="Custom Chart Title, default title will be set to the Plural Label of the Object appended wih 'Chart'" label="Custom Chart Title" placeholder="e.g. Contacts Chart" type="String"/>
+            <property name="showChart" description="Show a chart for the records" label="Show Chart" type="Boolean"/>
+            <property name="allowShowCharts" description="Show a button to toggle the chart display" label="Allow show chart toggle" type="Boolean"/>
+            <property name="hideRecordsShowChart" description="Hide the records and record related buttons (excluding refresh) to load charts faster" label="Hide Records when showing the Chart" type="Boolean"/>
+            <property name="chartColour" description="Custom colour used for border and background colours on charts. Random colours will be added when the chart requires it, like for a pie chart." label="Chart Colour" default="red" datasource="black,red,lime,blue,yellow,cyan,magenta,silver,gray,maroon,olive,green,purple,teal,navy" type="String"/>
+            <property name="chartLabelField" description="Field from the record to use when building the labels for the chart" label="Chart Label Field" type="String"/>
+            <property name="chartDataPointField" description="Field from the record to use when building the data points for the chart" label="Chart Data Point Field" type="String"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

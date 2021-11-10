@@ -1,0 +1,23 @@
+<!--
+ - Created by pablomartinez on 25/07/2019.
+ -->
+
+<apex:component id="icon" layout="none">
+  <apex:attribute name="elementId" type="String" required="true" description="Id to uniquely identified the icon" />
+  <apex:attribute name="path" type="String" required="true" description="Path to Icon to show" />
+  <apex:attribute name="classes" type="String" description="Classes to add to the svg" />
+  <apex:attribute name="type" type="String" description="Type of the icon. For now it's only lightning or not" default="lightning" />
+  <apex:attribute name="onclick" type="String" description="Function to execute on click" />
+  <apex:attribute name="title" type="String" description="Title to show when hovering the icon" />
+
+  <apex:outputPanel layout="none" rendered="{!type == 'lightning'}">
+    <title>{!title}</title>
+    <svg id="{!elementId}" class="{!classes}" onclick="{!onclick}">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!path}" />
+    </svg>
+  </apex:outputPanel>
+
+  <apex:outputPanel layout="none" rendered="{!type != 'lightning'}">
+    <apex:image html-data-id="{!elementId}" styleClass="{!classes}" url="{!path}" onclick="{!onclick}" title="{!title}" />
+  </apex:outputPanel>
+</apex:component>

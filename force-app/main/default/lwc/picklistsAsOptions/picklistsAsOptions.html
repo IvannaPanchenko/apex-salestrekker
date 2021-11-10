@@ -1,0 +1,142 @@
+<template>
+    <template if:false={gettingData}>
+        <template if:true={errorGetting}>
+            <span class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                {errorGetting}
+            </span>
+        </template>
+        <template if:false={errorGetting}>
+            <template if:true={isSaving}>
+                <lightning-spinner variant="brand" alternative-text="Loading"></lightning-spinner>
+            </template>
+            <template for:each={options} for:item="opt">
+                <fieldset key={opt.fieldName} class="slds-box slds-theme_default slds-container slds-m-bottom--small">
+                    <legend class="slds-form-element__label slds-text-title_caps">{opt.label}</legend>
+                    <template if:true={opt.allowSelectAll}>
+                            <div class="slds-form-element__control slds-m-bottom--medium" style="margin-top: -10px">
+                                <div class="slds-form-element slds-form--inline">
+                                    <label class="slds-form-element__label slds-text-title_bold" for={opt.fieldName}>{selectAllLabel}</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-checkbox slds-checkbox_standalone slds-grid slds-grow">
+                                         <input type="checkbox" id={opt.fieldName} value={opt.allSelected} checked={opt.allSelected} onchange={handleSelectAll} data-fieldname={opt.fieldName} />
+                                          <span class="slds-checkbox_faux"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                    </template>
+                    <div class="slds-grid slds-wrap">
+                        <template for:each={opt.values} for:item="val">
+                            <div key={val.value} class="slds-col slds-size--1-of-3 slds-m-bottom--small">
+                                <template if:true={opt.multipleSelection}>
+                                    <div class="slds-form-element__control">
+                                        <div class="slds-form-element slds-form--inline">
+                                            <label class="slds-form-element__label slds-size--1-of-2" for={val.id}>{val.label}</label>
+                                            <div class="slds-form-element__control">
+                                                <span class="slds-checkbox slds-checkbox_standalone  slds-size--1-of-2">
+                                                  <input type="checkbox" id={val.id} name={val.value} value={val.value} checked={val.checked} onchange={handleChange} data-fieldname={opt.fieldName}/>
+                                                  <span class="slds-checkbox_faux"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template if:false={opt.multipleSelection}>
+                                    <div class="slds-form-element__control">
+                                        <div class="slds-radio slds-grid slds-grow">
+                                            <input type="radio" id={val.id} name={opt.fieldName} value={val.value} checked={val.checked} onchange={handleChange} data-fieldname={opt.fieldName}/>
+                                            <label class="slds-radio__label slds-grid slds-size--1-of-1 slds-grow" for={val.id}>
+                                                <span class="slds-form-element__label slds-m-bottom--none slds-p-top--none slds-size--1-of-2">{val.label}</span>
+                                                <span class="slds-radio_faux slds-m-top--xxx-small slds-size--1-of-2"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </fieldset>
+            </template>
+            <template if:true={errorSaving}>
+                <span class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    {errorSaving}
+                </span>
+            </template>
+            <div class="slds-grid slds-grow">
+                <div class="slds-size--3-of-5">
+                    <template if:true={extraFieldName}>
+                        <div class="slds-form-element__control">
+                            <div class="slds-checkbox">
+                                <input type="checkbox" id={extraFieldName} name={extraFieldName} value={extraFieldName} checked={extraFieldChecked} onchange={handleExtraFieldChange} />
+                                <label class="slds-checkbox__label" for={extraFieldName}>
+                                    <span class="slds-form-element__label slds-m-bottom--none slds-p-top--none">{labelExtraField}</span>
+                                    <span class="slds-checkbox_faux slds-m-top--xxx-small"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="rightAlign slds-size--2-of-5">
+                    <template if:true={saveEnabled}>
+                        <template if:true={reloadButton}>
+                            <lightning-button-icon
+                                class="slds-m-right--x-small"
+                                alternative-text="Refresh"
+                                icon-name="utility:refresh"
+                                onclick={getData}>
+                            </lightning-button-icon>
+                        </template>
+                        <template if:true={showCongaButton}>
+                            <c-conga-button
+                             record-id={recordId}
+                             object-api-name={objectApiName}
+                             class="slds-m-right--x-small"
+                             button-disabled={changed}
+                             button-label={congaButtonLabel}
+                             button-variant={congaButtonVariant}
+                             conga-queries={congaQueries}
+                             conga-templates={congaTemplates}
+                             conga-attributes={congaAttributes}>
+                            </c-conga-button>
+                        </template>
+                        <template if:true={showFlowButton}>
+                            <lightning-button
+                                label={flowButtonLabel}
+                                class="slds-m-right--x-small"
+                                variant={flowButtonVariant}
+                                disabled={changed}
+                                onclick={handleCallFlow}>
+                            </lightning-button>
+                        </template>
+                        <lightning-button
+                            label={saveButtonLabel}
+                            class="slds-m-right--x-small"
+                            variant={saveButtonVariant}
+                            disabled={notChanged}
+                            onclick={handleSave}>
+                        </lightning-button>
+                        <lightning-button
+                            label="Cancel"
+                            class="slds-m-right--x-small"
+                            variant="neutral"
+                            disabled={notChanged}
+                            onclick={handleCancel}>
+                        </lightning-button>
+                    </template>
+                    <template if:true={resetEnabled}>
+                        <lightning-button
+                            label="Reset"
+                            variant="neutral"
+                            onclick={handleReset}>
+                        </lightning-button>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </template>
+    <template if:true={gettingData}>
+        <lightning-card title="Loading data. Please wait..." icon-name="utility:spinner">
+            <lightning-spinner variant="brand" alternative-text="Loading"></lightning-spinner>
+        </lightning-card>
+    </template>
+</template>

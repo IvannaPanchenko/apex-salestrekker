@@ -1,0 +1,32 @@
+<!--
+ - Created by pablomartinez on 18/07/2019.
+ -->
+
+<apex:component id="spinner">
+  <div class="slds-spinner_container slds-hide">
+    <div class="slds-spinner slds-spinner_brand slds-spinner_medium" aria-hidden="false" role="alert">
+      <div class="slds-spinner__dot-a"></div>
+      <div class="slds-spinner__dot-b"></div>
+    </div>
+  </div>
+
+  <script>
+    function showSpinner() {
+      $('.slds-spinner_container').removeClass('slds-hide');
+      $('.slds-spinner_container').addClass('slds-show');
+
+      var winWidth = $(window).height() < document.getElementById("body").scrollHeight ? $(document).width() : $(window).width();
+      var winHeight = $(window).height() < document.getElementById("body").scrollHeight ? $(document).height() : $(window).height();
+
+      $('.slds-spinner_container').css({'width': winWidth, 'height': winHeight});
+    }
+
+    function hideSpinner() {
+
+      $('.slds-spinner_container').removeClass('slds-show');
+      $('.slds-spinner_container').addClass('slds-hide');
+
+    }
+
+  </script>
+</apex:component>

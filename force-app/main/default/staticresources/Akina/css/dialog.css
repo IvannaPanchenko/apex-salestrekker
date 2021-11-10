@@ -1,0 +1,33 @@
+.modal-alert {
+  z-index: 99999 !important;
+}
+.modal-backdrop-alert {
+  z-index: 99998 !important;
+}
+
+.dialog .slds-datepicker.slds-dropdown.slds-dropdown--left {
+	position: fixed;
+	left: 35%;
+}
+
+/* MODAL BACKDROP */
+.slds-scope .slds-modal-backdrop {
+    transition-duration: .4s;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(126,140,153,.8);
+    z-index: 9000;
+}
+
+.slds-scope .slds-modal-backdrop--open, .slds-scope .slds-modal-backdrop_open {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity .4s linear;
+}

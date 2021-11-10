@@ -1,0 +1,8 @@
+<template>
+    <div class="cursor--pointer" onclick={sortTable}>
+        <span class="slds-truncate title slds-text-title--caps" title={field.label}>{field.label}</span>
+        <template if:true={ordered}>
+            <lightning-icon icon-name={orderIcon} size="xx-small" class="order-icon"></lightning-icon>
+        </template>
+    </div>
+</template>

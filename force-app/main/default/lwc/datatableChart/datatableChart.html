@@ -1,0 +1,17 @@
+<template>
+    <template if:false={isLoading}>
+        <template if:true={error}>
+            <span class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">{error}</span>
+        </template>
+        <template if:false={error}>
+            <div class="slds-m-around_medium">
+                <canvas class="stepped" lwc:dom="manual"></canvas>
+            </div>
+        </template>
+    </template>
+    <template if:true={isLoading}>
+        <lightning-card title="Loading chart. Please wait..." icon-name="utility:spinner">
+            <lightning-spinner variant="brand" alternative-text="Loading"></lightning-spinner>
+        </lightning-card>
+    </template>
+</template>

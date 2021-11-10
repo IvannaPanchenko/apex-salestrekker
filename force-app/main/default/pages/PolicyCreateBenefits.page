@@ -1,0 +1,236 @@
+<apex:page standardController="Policy__c" extensions="PolicyCreateBenefitsController" docType="html-5.0" showHeader="false" sidebar="false" title="Policy Benefits" tabStyle="Policy__c">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.js"></script>
+    <!-- Important To Include ALJS init File-->
+    <script src="{!URLFOR($Resource.aljs, '/jquery.aljs-init.min.js')}"></script>
+    <!-- ALJS Datepicker Module-->
+    <script src="{!URLFOR($Resource.aljs, '/jquery.aljs-datepicker.min.js')}"></script>
+    <script src="{!URLFOR($Resource.Akina, '/js/SLDSDynamicLookup.js')}"/>
+    <style>
+        .navbar {
+            overflow: hidden;
+            z-index: 1;
+            position: fixed;
+            background: white;
+            top: 0;
+            width: 100%;
+        }
+    </style>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" lang="en">
+    <apex:slds />
+    <body class="slds-scope" id="body" style="overflow-y: auto;">
+    <apex:form enctype="multipart/form-data" id="form" style="overflow-y: hidden;" onmousemove="validateField();">
+        <div class="navbar">
+            <apex:outputPanel id="pageNotif">
+                <div id="pageMessages">
+                    <apex:repeat value="{!allPageMessagesMap}" var="alertTheme">
+                        <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_{!alertTheme}" role="alert">
+                            <span class="slds-assistive-text">{!alertTheme}</span>
+                            <h2 class="slds-text-heading_small"> 
+                                <apex:repeat value="{!allPageMessagesMap[alertTheme]}" var="message">
+                                    <apex:outputText value="{!message}" escape="false" /><br/>
+                                </apex:repeat>
+                            </h2>
+                        </div>
+                    </apex:repeat>
+                </div>
+            </apex:outputPanel>
+            <div class="slds-page-header">
+                <div class="slds-grid">
+                    <div class="slds-col slds-has-flexi-truncate">
+                        <div class="slds-media slds-no-space slds-grow">
+                            <div class="slds-media__figure">
+                                <span class="slds-icon_container slds-icon-standard-case" title="{!Policy__c.Name}">
+                                    <svg class="slds-icon" aria-hidden="true">
+                                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/custom-sprite/svg/symbols.svg#custom55')}" />
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="slds-media__body">
+                                <nav>
+                                    <ol class="slds-breadcrumb slds-line-height_reset">
+                                        <li class="slds-breadcrumb__item">
+                                            <span>Policy</span>
+                                        </li>
+                                    </ol>
+                                </nav>
+                                <h1 class="slds-page-header__title slds-m-right_small slds-align-middle slds-truncate" title="{!Policy__c.Name}">{!Policy__c.Name}</h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-no-flex slds-grid slds-align-top">
+                        <div class="slds-button-group" role="group">
+                            <apex:commandButton action="{!cancel}" styleClass="slds-button slds-button_neutral" value="Back to Policy"/>
+                            <apex:commandButton styleClass="slds-button slds-button_brand" value="Save" action="{!saveRecords}" rerender="pageNotif, mainPanel" onclick="showSpinner();" oncomplete="hideSpinner();"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 15px; margin-top: {!IF(lightning, '70px', '90px')}">
+            <apex:outputPanel id="mainPanel">
+            <apex:repeat value="{!benefitsTypeList}" var="type">
+                <div class="slds-section {!IF(sectionFlags[type.Recordtype__c], 'slds-is-open', '')}">
+                    <h3 class="slds-section__title">
+                        <button id="{!type.Name}" class="slds-button slds-section__title-action" onclick="openSection(this, '{!type.Recordtype__c}'); return false;">
+                            <svg aria-hidden="true" class="slds-section__title-action-icon slds-button__icon slds-button__icon_left">
+                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#switch')}"></use>
+                            </svg>
+                            <span class="slds-truncate" title="{!type.Name}">{!type.Name}</span>
+                        </button>
+                    </h3>
+                    <div aria-hidden="true" class="slds-section__content">
+                        <fieldset class="slds-box slds-theme_default slds-container slds-form-element">
+                            <apex:repeat value="{!policyBenefits[type.Recordtype__c]}" var="benefit" rendered="{!benefitsTypeFlag[type.Recordtype__c]}">
+                                <fieldset class="slds-box slds-theme_default slds-container slds-form-element slds-m-bottom_large">
+                                <legend class="slds-form-element__label slds-text-title_caps"><b>{!IF(ISBLANK(policyBenefits[type.Recordtype__c][benefit].Id), 'New Policy Benefit: ' + type.Name, policyBenefits[type.Recordtype__c][benefit].Name)}</b></legend>
+                                <div class="slds-text-title_caps slds-text-align_left slds-p-left_small">Details</div>
+                                <div class="slds-grid slds-wrap slds-p-top_small">
+                                    <apex:repeat value="{!$ObjectType.Policy_Benefit__c.FieldSets[type.Field_Sets_Name__c]}" var="field">
+                                        <div class="slds-col slds-size_4-of-12 slds-truncate_container_33 slds-p-around_x-small">
+                                            <span class="slds-required {!IF(field.DBRequired, '', 'slds-hide')}">*</span><label class="slds-form-element__label">{!field.Label}</label>
+                                            <div id="{!benefit}details">
+                                                <apex:inputField value="{!policyBenefits[type.Recordtype__c][benefit][field]}" styleClass="slds-input" rendered="{!AND(field.Type != 'reference', field.Type != 'date', field.Type != 'boolean')}" html-autocomplete="off"/>
+                                                <c:SLDSDynamicLookup rendered="{!field.Type == 'reference'}" SLDSResourceName="$Asset.SLDS" ObjectApiName="Account" DisplayFieldApiNames="Name,Type" DisplayFieldsPattern="Name" AdditionalWHEREFilter="IsPersonAccount = true" photo="url->/img/icon/t4v35/standard/person_account_120.png" LabelName="PersonInsured{!benefit}" PlaceholderText="Search Accounts..." SetValueToField="{!policyBenefits[type.Recordtype__c][benefit][field]}"/>
+                                                
+                                                <apex:outputPanel rendered="{!field.Type == 'date'}">
+                                                    <div class="slds-form-element">
+                                                        <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                                            <svg aria-hidden="true" class="slds-input__icon slds-icon-text-default">
+                                                                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#event')}"></use>
+                                                            </svg>
+                                                            <apex:inputText value="{!dates[benefit][field]}" styleClass="slds-input date" html-placeholder="dd/MM/YYYY" html-autocomplete="off"/>
+                                                        </div>
+                                                    </div>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!field.Type == 'boolean'}">
+                                                    <div class="slds-form-element__control">
+                                                        <div class="slds-media">
+                                                            <div class="slds-media__figure">
+                                                            <label class="slds-checkbox">
+                                                                <apex:inputCheckbox styleClass="slds-input" value="{!policyBenefits[type.Recordtype__c][benefit][field]}"/>
+                                                                <span class="slds-checkbox_faux"></span>  
+                                                                <span class="slds-form-element__label"></span>
+                                                            </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </apex:outputPanel>
+                                            </div>
+                                        </div>
+                                    </apex:repeat>
+                                </div>
+                                <div id="{!type.Name}-clonebtn" class="slds-float_right slds-m-top_x-small">
+                                    <button class="slds-button slds-button_icon slds-button_icon-brand slds-button_icon-border-filled {!IF(ISBLANK(policyBenefits[type.Recordtype__c][benefit].Id), '', 'slds-hide')}" aria-pressed="false" title="Remove" onclick="remove('{!benefit}', '{!type.Recordtype__c}'); return false;">
+                                        <svg class="slds-button__icon" aria-hidden="true">
+                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#delete')}"></use>
+                                        </svg>
+                                        <span class="slds-assistive-text">Remove</span>
+                                    </button>
+                                    <button class="slds-button slds-button_icon slds-button_icon-brand slds-button_icon-border-filled {!IF(ISBLANK(policyBenefits[type.Recordtype__c][benefit].Id), 'slds-hide', '')}" aria-pressed="false" title="Remove" onclick="validateDelete('{!benefit}', '{!type.Recordtype__c}'); return false;">
+                                        <svg class="slds-button__icon" aria-hidden="true">
+                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#delete')}"></use>
+                                        </svg>
+                                        <span class="slds-assistive-text">Remove</span>
+                                    </button>
+                                    <button class="slds-button slds-button_icon slds-button_icon-brand slds-button_icon-border-filled" aria-pressed="false" title="Clone" onclick="clone('{!benefit}', '{!type.Recordtype__c}'); return false;">
+                                        <svg class="slds-button__icon" aria-hidden="true">
+                                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#clone')}"></use>
+                                        </svg>
+                                        <span class="slds-assistive-text">Clone</span>
+                                    </button>
+                                </div>
+                                </fieldset>
+                            </apex:repeat>
+                            <div id="{!type.Name}-addbtn" class="slds-float_right">
+                                <apex:commandButton value="New" action="{!newRecord}" styleClass="slds-button slds-button_brand" title="Add {!type.Name}" rerender="pageNotif, mainPanel">
+                                    <apex:param name="benefitType" value="{!type.Recordtype__c}" assignTo="{!benefitType}"/>
+                                </apex:commandButton>
+                            </div>
+                            <i><apex:outputText value="No {!type.Name} benefits found." rendered="{!NOT(benefitsTypeFlag[type.Recordtype__c])}"/></i>
+                        </fieldset>
+                    </div>
+                </div>
+            </apex:repeat>
+            <apex:actionFunction name="clone" action="{!cloneRecord}" rerender="pageNotif, mainPanel">
+                <apex:param name="selectedId" value="" assignTo="{!selectedId}"/>
+                <apex:param name="benefitType" value="" assignTo="{!benefitType}"/>
+            </apex:actionFunction>
+            <apex:actionFunction name="remove" action="{!removeRecord}" rerender="pageNotif, mainPanel">
+                <apex:param name="selectedId" value="" assignTo="{!selectedId}"/>
+                <apex:param name="benefitType" value="" assignTo="{!benefitType}"/>
+            </apex:actionFunction>
+            <apex:repeat value="{!sectionFlags}" var="flag">
+                <div id="{!flag}">
+                    <apex:inputHidden value="{!sectionFlags[flag]}"/>
+                </div>
+            </apex:repeat>
+            <script>
+                $('.date').datepicker();
+                
+                setTimeout(function() { $('#pageMessages').fadeOut('slow'); }, 10000);
+            </script>
+            </apex:outputPanel>
+        </div>
+    </apex:form>
+    </body>
+    <script>
+    
+         $.aljsInit({
+          assetsLocation: '{!URLFOR($Asset.SLDS)}', //SLDS Static Resource Path
+          scoped: false
+        });
+        
+        setTimeout(function() { $('#pageMessages').fadeOut('slow'); }, 10000);
+        
+        $(document).ready(function() {
+            
+            //$('.date' + i).datepicker({ dateFormat: 'dd-mm-yy' });
+            $('.date').datepicker();
+        });
+        
+        function validateField(){
+            $("select").addClass("slds-input");
+        }
+        
+        function openSection(e, type){
+        
+            if($(e).parent().parent().hasClass('slds-is-open')){
+                $(e).parent().parent().removeClass('slds-is-open');
+                $(e).parent().parent().find('.slds-section__content').hide();
+                //setBoolean(type, false);
+                $('#' + type + ' input').val(false);
+            }
+            else{
+                $(e).parent().parent().toggleClass('slds-is-open');
+                $(e).parent().parent().find('.slds-section__content').show();
+                //setBoolean(type, true);
+                $('#' + type + ' input').val(true);
+            } 
+        }
+        
+        function showSpinner() {
+            $('.slds-spinner_container').removeClass('slds-hide');
+            $('.slds-spinner_container').addClass('slds-show'); 
+        
+            var winWidth = $(window).height() < document.getElementById("body").scrollHeight ? $(document).width() : $(window).width();
+            var winHeight = $(window).height() < document.getElementById("body").scrollHeight ? $(document).height() : $(window).height();
+             
+            $('.slds-spinner_container').css({ 'width': winWidth,'height': winHeight });
+        }
+        
+        function hideSpinner() {  
+                       
+            $('.slds-spinner_container').removeClass('slds-show');
+            $('.slds-spinner_container').addClass('slds-hide');
+        }
+        
+        function validateDelete(benefit, type) {
+            if(confirm('Are you sure you want to delete this record?')) {
+                remove(benefit, type);
+            }
+        }
+    </script>
+        
+    </html>
+</apex:page>

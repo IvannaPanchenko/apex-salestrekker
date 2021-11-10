@@ -1,0 +1,29 @@
+<template>
+    <td class={cellClasses} if:true={allowDelete}>
+        <lightning-input 
+            type="checkbox"
+            label=""
+            name={record.id}
+            onchange={handleSelectRow}
+            checked={rowSelected}>
+        </lightning-input>
+    </td>
+    <template for:each={columns} for:item="fl">
+        <c-datatable-cell 
+            class={cellClasses}
+            key={fl.fieldName}
+            record={record}
+            field={fl}
+            related-field={relatedField}
+            parent-id={parentId}
+            object-name={objectName}
+            can-edit={canEdit}
+            onchangefield={handleChangeInput}
+            is-aggregate={isAggregate}
+            editable-fields={editableFields}
+            is-saving={isSaving}
+            onerr={handleError}
+        >
+        </c-datatable-cell>
+    </template>
+</template>

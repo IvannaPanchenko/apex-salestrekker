@@ -1,0 +1,5 @@
+<design:component >
+    <design:attribute name="flowName" label="Id of the New Record" default="Create_Advice" />
+    <design:attribute name="createdRecordIdVariableName" label="Id of the New Record" default="outputRecordId" />
+    <design:attribute name="redirectToCreatedRecord" label="Id of the New Record" default="true"/>
+</design:component>

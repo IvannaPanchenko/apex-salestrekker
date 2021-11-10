@@ -1,0 +1,7 @@
+<design:component label="Flow Button Everywhere">
+    <!-- AURA COMPONENT ATTRIBUTES -->
+    <design:attribute name="buttonLabel" description="Label for the Button " label="Label of the Button" default="Flow"/>
+    <design:attribute name="buttonVariant" description="Color for the Button" label="Color for the Button" datasource="base,neutral,brand,destructive,inverse,success" default="brand"/>
+    <design:attribute name="buttonFlow" description="API Name of the Flow to Execute" label="Flow API Name"/>
+    <design:attribute name="buttonFlowVariableValues" description="Values of variables to send to the Flow (variableName:variableValue. Split by ,). The recordId is always passed as a variable" label="Flow Variables and Values"/>
+</design:component>

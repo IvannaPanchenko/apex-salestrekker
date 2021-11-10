@@ -1,0 +1,82 @@
+<!--
+ - Created by pablomartinez on 16/07/2019.
+ -->
+<apex:component id="dialog" layout="none">
+  <link href="{!$Resource.Akina + '/css/dialog.css'}" rel="stylesheet" type="text/css"/>
+
+  <apex:attribute name="name" type="String" required="true" description="A unique name of the dialog" />
+  <apex:attribute name="title" type="String" description="The title of the dialog" />
+  <apex:attribute name="type" type="String" description="The type of the dialog, if it's alert will appear on top of every other dialog" />
+  <apex:attribute name="closeButtonClick" type="String" description="Function to execute when Closing" />
+  <apex:attribute name="showCloseButton" type="Boolean" description="To show or hide the close button" default="true" />
+  <apex:attribute name="confirmButtonClick" type="String" description="Function to execute when Confirming" />
+  <apex:attribute name="confirmButtonLabel" type="String" description="Label of the Confirm Button" default="Save"/>
+
+  <div class="dialog">
+    <div aria-hidden="false" role="dialog" class="slds-modal slds-fade-in-close slds-modal_small {!IF(type == 'alert', 'modal-alert', '')}" id="{!name}Dialog" tabindex="-1" aria-labelledby="{!name}Dialog">
+      <div class="slds-modal__container">
+        <apex:outputPanel rendered="{!!ISNULL(title)}" layout="none">
+          <header class="slds-modal__header">
+            <c:icon elementId="dialog-buttons-cancel-title" path="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#close')}" classes="slds-button slds-button_icon slds-modal__close iconButton icon-white"
+                    onclick="closeDialog{!name}('{!closeButtonClick}');return false;" />
+            <h2 id="dialog-heading-text" class="slds-text-heading_medium slds-hyphenate">{!title}</h2>
+          </header>
+        </apex:outputPanel>
+        <div id="dialog-body" class="slds-modal__content slds-p-around_medium">
+          <apex:componentBody />
+        </div>
+        <div class="slds-modal__footer">
+          <div class="slds-button-group slds-float_right" role="group">
+            <apex:outputPanel layout="none" rendered="{!showCloseButton}">
+              <button id="dialog-buttons-cancel" class='slds-button slds-button_neutral cancel' value="Cancel" onclick="closeDialog{!name}('{!closeButtonClick}');return false;">
+                Cancel
+              </button>
+            </apex:outputPanel>
+            <button id="dialog-buttons-confirm" class='slds-button slds-button_brand save' onclick="confirmDialog{!name}('{!confirmButtonClick}'); return false;">
+              {!confirmButtonLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slds-modal-backdrop slds-modal-backdrop--close {!IF(type == 'alert', 'modal-backdrop-alert', '')}" id="{!name}Backdrop"></div>
+  </div>
+
+  <script>
+    function closeDialog{!name}(onclose) {
+      $('#{!name}Dialog').addClass('slds-fade-in-close').removeClass('slds-fade-in-open');
+      $('#{!name}Backdrop').addClass('slds-modal-backdrop--close').removeClass('slds-modal-backdrop--open');
+
+      if (onclose) {
+        this[onclose]();
+      }
+    }
+
+    function confirmDialog{!name}(onclick) {
+      if (onclick) {
+        this[onclick]();
+      } else {
+        closeDialog{!name}();
+      }
+    }
+
+    function openDialog(name, focusOnFirstElement = false) {
+      $('#' + name + 'Dialog').addClass('slds-fade-in-open').removeClass('slds-fade-in-close');
+      $('#' + name + 'Backdrop').addClass('slds-modal-backdrop--open').removeClass('slds-modal-backdrop--close');
+
+      if (typeof focusOnFirstElement !== 'undefined' && focusOnFirstElement) {
+        let theElements = $('#' + name + 'Dialog').find('input,textarea').filter(':visible');
+        if (theElements && theElements.length) {
+          theElements[0].select();
+        }
+      }
+
+      // set date pickers of the dialog
+        $('#' + name + 'Dialog').find('input[class*="date"]').each(function( ) {
+          $(this).datepicker();
+        });
+
+    }
+  </script>
+
+</apex:component>

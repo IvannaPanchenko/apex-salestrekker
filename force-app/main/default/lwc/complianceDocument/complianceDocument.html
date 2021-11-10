@@ -1,0 +1,165 @@
+<!--
+  @File Name          : complianceDocument.html
+  @Description        : Dynamic Component that shows a list of compliance document as defined through LWC Setting.
+  @Author             : Alvin Aquino
+  @Modification Log   : 
+  Ver           Date            Author      		    Modification
+  1.0    January 30, 2020     Alvin Aquino             Initial Version
+-->
+<template>
+
+    <div if:true={isLoadedFull}>
+        <lightning-spinner style="position: fixed;" alternative-text="Loading..."></lightning-spinner>
+        <div style="position: fixed;" class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+    <lightning-card>
+        <h3 slot="title">
+            <lightning-icon icon-name="standard:picklist_choice" size="small"></lightning-icon>
+            &nbsp; <b>Compliance Documents </b>
+        </h3>
+        <div slot="footer">
+        </div>
+
+        
+
+        <template if:true={getComDoclst}>
+            <lightning-layout multiple-rows="true">
+            <template for:each={getComDoclst.data} for:item="wrapper">
+                <lightning-layout-item key={wrapper.type} size="12" class="slds-border_bottom">
+                    <lightning-layout>
+                    <lightning-layout-item padding="around-small" size="1" key={wrapper.bExisting}>
+                        <div if:true={wrapper.bExisting}>
+                            <lightning-icon icon-name="standard:task" size="small"></lightning-icon>
+                        </div>
+                        <div if:false={wrapper.bExisting}>
+                            <lightning-icon icon-name="standard:product_required" size="small"></lightning-icon>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item padding="around-small"  size="2" key={wrapper.type}>
+                        {wrapper.type}
+                    </lightning-layout-item>
+                    <lightning-layout-item padding="around-small" size="1" key={wrapper.bExisting}>
+                        <div if:true={wrapper.bExisting}>
+                            <lightning-input type="checkbox" variant="label-hidden" checked disabled></lightning-input>
+                        </div>
+                        <div if:false={wrapper.bExisting}>
+                            <lightning-input type="checkbox" variant="label-hidden" disabled></lightning-input>
+                        </div>
+                        
+                    </lightning-layout-item>
+                    <lightning-layout-item padding="around-small" size="3" key={wrapper.sUploadLabel} >
+                        <div if:true={wrapper.bExisting}>
+                            <lightning-button label={wrapper.sUploadLabel} onclick={openmodalreplacefile} value={wrapper}
+                                icon-name="utility:upload" class="slds-m-left_x-small"></lightning-button>
+                        </div>
+                        <div if:false={wrapper.bExisting}>
+                            <lightning-button label={wrapper.sUploadLabel} onclick={openmodaladdfile} value={wrapper.MetadataId}
+                                icon-name="utility:upload" class="slds-m-left_x-small"></lightning-button>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item   size="4" key={wrapper.cdocid}>
+                        <div if:true={wrapper.cdocrec}>
+                            <lightning-layout multiple-rows="true">
+                                <lightning-layout-item padding="around-small" size="12">
+                                    <lightning-button variant="base" label={wrapper.cdocrec.Title} title={wrapper.cdocrec.Title} onclick={previewfile} value={wrapper.cdocrec.Id}></lightning-button><br/>
+                                    <lightning-formatted-date-time value={wrapper.cdocrec.CreatedDate} time-zone="Pacific/Auckland" year="numeric" month="numeric" day="numeric"></lightning-formatted-date-time>
+                                    &nbsp;&middot;&nbsp; {wrapper.cdsize} &nbsp;&middot;&nbsp; {wrapper.cdocrec.FileExtension} 
+                                </lightning-layout-item>
+                                
+
+                            </lightning-layout>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="1" padding="around-small"  >
+                        <div if:true={wrapper.cdocrec}>
+                            <lightning-button value={wrapper.compdocid} variant="base" onclick={removeComDoc} icon-name="utility:delete" size="xx-small" title="Removing this document from the compliance checklist will not delete the file.  This file will still be available in the files tab."></lightning-button>
+                            
+                        </div>
+
+                    </lightning-layout-item>
+                    </lightning-layout>
+                </lightning-layout-item>
+            </template>
+            </lightning-layout>
+        </template>
+    </lightning-card>
+
+    <!--MODAL-->
+  
+
+        <template if:true={openmodel}>
+        <div class="demo-only" style="height: 640px;">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                            <lightning-icon icon-name="utility:close" size="medium">
+                            </lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate"><b>Select Files</b></h2>
+                    </header>
+                    <div class="slds-modal__content" id="modal-content-id-1">
+                        <!--BODY CONTENT-->
+                        <lightning-layout class="slds-border_bottom slds-theme_shade">
+                            <lightning-layout-item size="4" class="slds-border_right" padding="around-small">
+                                <center>
+                                    <lightning-icon icon-name="standard:file" size="small"></lightning-icon>
+                                    &nbsp;    Add New File
+                                </center>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="8" class="slds-border_left" padding="around-small">
+                                <center>
+                                    <lightning-icon icon-name="standard:folder" size="small"></lightning-icon>
+                                    &nbsp; Related Files
+                                </center>
+                            </lightning-layout-item>
+                            
+                        </lightning-layout>
+                        <lightning-layout multiple-rows="true">
+                            <lightning-layout-item size="4"  class="slds-border_right" padding="around-small">
+                                
+                                <lightning-layout multiple-rows="true">
+                                    <lightning-layout-item size="12" padding="around-small">
+                                        <lightning-file-upload name="fileUploader" accept={acceptedFormats} 
+                                            record-id={recordId} onuploadfinished={savenewfile}></lightning-file-upload>
+                                    </lightning-layout-item>
+                                    
+                                </lightning-layout>
+
+                            </lightning-layout-item>
+                            <lightning-layout-item size="8">
+                                
+                                
+                                <lightning-layout multiple-rows="true">
+                                    
+                                <template for:each={getRelFilelst.data} for:item="relfile">
+                                        <lightning-layout-item size="12" key={relfile.id} padding="around-small" class="slds-border_bottom slds-border_left">
+                                            <lightning-button variant="base" label={relfile.ContentDocument.Title} title={relfile.ContentDocument.Title} onclick={saveCompDoc} value={relfile}></lightning-button>
+                                            <br/>
+                                            <lightning-formatted-date-time value={relfile.ContentDocument.CreatedDate} time-zone="Pacific/Auckland" year="numeric" month="numeric" day="numeric"></lightning-formatted-date-time>
+                                    &nbsp;&middot;&nbsp; {relfile.ContentDocument.ContentSize}B &nbsp;&middot;&nbsp; {relfile.ContentDocument.FileExtension}
+                                            
+                                        </lightning-layout-item>
+
+                                    
+                                </template>
+                                </lightning-layout>
+
+                                
+                            </lightning-layout-item>
+                        </lightning-layout>
+
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" variant="neutral" onclick={closeModal}></lightning-button>&nbsp;&nbsp;&nbsp;&nbsp;
+                        <!--<lightning-button label="Save" variant="brand" onclick={saveMethod}></lightning-button>-->
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+        </template>
+
+
+</template>

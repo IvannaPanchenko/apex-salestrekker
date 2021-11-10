@@ -1,0 +1,334 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-card title="Loading records. Please wait..." icon-name="utility:spinner">
+            <lightning-spinner variant="brand" alternative-text="Loading"></lightning-spinner>
+        </lightning-card>
+    </template>
+    <template if:false={isLoading}>
+
+        <template if:true={isEditRowModalVisible}>
+            <c-datatable-edit-modal onsuccess={handleFinishEdit} oncancel={closeModal} record={selectedRow} objectname={objectName} edit-field-set-name={editFieldSetName}></c-datatable-edit-modal>
+        </template>
+
+        <lightning-card variant="Narrow" icon-name={iconName}>
+            <div slot="title">
+                <template if:true={iconFullUrl}>
+                    <img src={iconFullUrl} class="slds-avatar slds-avatar--x-small">
+                </template>
+                <span class="slds-align-middle slds-m-left--x-small slds-page-header__title slds-show--inline">{title}</span>
+            </div>
+            <template if:true={error}>
+                <span class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">{error}</span>
+            </template>
+            <template if:false={error}>
+                <template if:true={isSaving}>
+                    <lightning-spinner variant="brand" alternative-text="Loading"></lightning-spinner>
+                </template>
+                <lightning-button-group slot="actions" if:false={showIconButtons}>
+                    <template if:true={canCreate}>
+                        <lightning-button
+                            label="Add"
+                            onclick={handleAddNewRow}>
+                        </lightning-button>
+                    </template>
+                    <template if:true={showEdit}>
+                        <lightning-button
+                            label={editableLabel}
+                            onclick={toggleEditable}>
+                        </lightning-button>
+                    </template>
+                    <template if:true={showEditRow}>
+                        <lightning-button 
+                            label="Edit Row"
+                            disabled={disableEditRow}
+                            onclick={handleEditRow}>
+                        </lightning-button>
+                    </template>
+                    <template if:true={canDelete}>
+                        <lightning-button
+                            label="Delete"
+                            disabled={disableDeletion}
+                            onclick={toggleDeleteModal}>
+                        </lightning-button>
+                    </template>
+                    <template if:true={canCreateOrEdit}>
+                        <lightning-button
+                            label="Cancel"
+                            disabled={formNotChanged}
+                            onclick={handleCancel}>
+                        </lightning-button>
+                        <lightning-button
+                            label="Save"
+                            variant="brand"
+                            disabled={formNotChanged}
+                            onclick={handleSave}>
+                        </lightning-button>
+                    </template>
+                    <lightning-button
+                            if:true={allowShowChart}
+                            label="Show Chart"
+                            variant={showChartVariant}
+                            onclick={toggleChartDisplay}>
+                    </lightning-button>
+                    <lightning-button
+                            label="Refresh"
+                            onclick={getTheRecords}>
+                    </lightning-button>
+                </lightning-button-group>
+
+                <lightning-button-group slot="actions" if:true={showIconButtons}>
+                    <template if:true={canCreate}>
+                        <lightning-button-icon
+                            alternative-text="Add"
+                            icon-name="utility:add"
+                            onclick={handleAddNewRow}>
+                        </lightning-button-icon>
+                    </template>
+                    <template if:true={showEdit}>
+                        <lightning-button-icon
+                            alternative-text={editableLabel}
+                            icon-name="utility:edit"
+                            variant={editableVariant}
+                            onclick={toggleEditable}>
+                        </lightning-button-icon>
+                    </template>
+                    <template if:true={showEditRow}>
+                        <lightning-button-icon 
+                        alternative-text="Edit Row"
+                        icon-name="utility:edit_form" 
+                        disabled={disableEditRow}
+                        onclick={handleEditRow}>
+                        </lightning-button-icon>
+                    </template>
+                    <template if:true={canDelete}>
+                        <lightning-button-icon
+                            alternative-text="Delete"
+                            icon-name="utility:delete"
+                            disabled={disableDeletion}
+                            onclick={toggleDeleteModal}>
+                        </lightning-button-icon>
+                    </template>
+                    <template if:true={canCreateOrEdit}>
+                        <lightning-button-icon
+                            alternative-text="Cancel"
+                            icon-name="utility:undo"
+                            disabled={formNotChanged}
+                            onclick={handleCancel}>
+                        </lightning-button-icon>
+                        <lightning-button-icon
+                            alternative-text="Save"
+                            icon-name="utility:save"
+                            variant="brand"
+                            disabled={formNotChanged}
+                            onclick={handleSave}>
+                        </lightning-button-icon>
+                    </template>
+                    <lightning-button-icon
+                            if:true={allowShowChart}
+                            alternative-text="Show Chart"
+                            icon-name="utility:chart"
+                            variant={showChartVariant}
+                            onclick={toggleChartDisplay}>
+                    </lightning-button-icon>
+                    <lightning-button-icon
+                            alternative-text="Refresh"
+                            icon-name="utility:refresh"
+                            onclick={getTheRecords}>
+                    </lightning-button-icon>
+                </lightning-button-group>
+
+                <div class="slds-p-horizontal_small" if:true={showChart}>
+                    <c-datatable-chart type={chartType}
+                                    title={customChartTitle}
+                                    records={records}
+                                    fields={objectData.fields}
+                                    chart-colour={chartColour}
+                                    chart-label-field={chartLabelField}
+                                    chart-data-point-field={chartDataPointField}>
+                    </c-datatable-chart>
+                </div>
+
+                <div class="slds-p-horizontal_small" if:true={showRecords}>
+
+                    <div class="slds-clearfix slds-p-bottom_small" if:true={allowSearch}>
+                        <div class="slds-float_left slds-p-around_x-small">
+                            <strong>{queryTotals}</strong>
+                        </div>
+                        <lightning-input
+                                class="slds-float_right"
+                                name="table-search"
+                                label="Search the table"
+                                placeholder="Search the table"
+                                variant="label-hidden"
+                                onchange={handleSearchInput}
+                                type="search"
+                        ></lightning-input>
+                    </div>
+
+                    <div class="slds-box" style="max-height: 375px;">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <thead>
+                                <tr>
+                                     <th class="checkbox" if:true={canDelete}>
+                                        <lightning-input type="checkbox"
+                                                        label=""
+                                                        name="selectAll"
+                                                        onchange={handleSelectAllRows}
+                                                        checked={allSelected}>
+                                        </lightning-input>
+                                    </th>
+                                    <template for:each={objectData.fields} for:item="fl">
+                                        <th key={fl.fieldName}>
+                                            <c-datatable-header key={fl.fieldName}
+                                                                field={fl}
+                                                                onsort={handleSort}
+                                                                order={clientOrder}>
+                                            </c-datatable-header>
+                                        </th>
+                                    </template> 
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={pagedRecordList} for:item="data">
+                                    <c-datatable-row class="display-table-row"
+                                                    key={data.id}
+                                                    record={data}
+                                                    related-field={objectData.relatedField}
+                                                    parent-id={parentId}
+                                                    columns={objectData.fields}
+                                                    object-name={objectData.objectName}
+                                                    onchangefield={handleChangeInput}
+                                                    selected-rows={selectedRows}
+                                                    onselectrow={handleSelectRow}
+                                                    allow-edit={canEdit}
+                                                    allow-delete={canDelete}
+                                                    is-aggregate={isAggregate}
+                                                    is-saving={isSaving}
+                                                    editable-fields={editableFields}
+                                                    onerror={handleError}>
+                                    </c-datatable-row>
+                                </template>
+                            </tbody>
+                        </table>
+                        <template if:false={hasRecords}>
+                            <br /><br />
+                            <div class="slds-m-top--small slds-text-align--center">No {title} added.</div>
+                            <br /><br />
+                        </template>
+                        <template if:true={hasRecords}>
+                            <br/><br/><br/><br /><br />
+                        </template>
+                    </div>
+
+                    <div class="slds-clearfix slds-m-top_small">
+                        <div class="slds-float--right" if:true={showPagination}>
+                            <lightning-button-group if:false={showIconButtons}>
+                                <lightning-button
+                                        label="First Page"
+                                        disabled={canGoPrevPage}
+                                        onclick={goToFirstPage}>
+                                </lightning-button>
+                                <lightning-button
+                                        label="Prev Page"
+                                        disabled={canGoPrevPage}
+                                        onclick={goToPrevPage}>
+                                </lightning-button>
+                                <lightning-button
+                                        label={currentPageLabel}
+                                        disabled={currentPageLabel}
+                                        onclick={goToFirstPage}>
+                                </lightning-button>
+                                <lightning-button
+                                        label="Next Page"
+                                        disabled={canGoNextPage}
+                                        onclick={goToNextPage}>
+                                </lightning-button>
+                                <lightning-button
+                                        label="Last Page"
+                                        disabled={canGoNextPage}
+                                        onclick={goToLastPage}>
+                                </lightning-button>
+                            </lightning-button-group>
+
+                            <lightning-button-group class="slds-float--right" if:true={showIconButtons}>
+                                <lightning-button-icon
+                                        alternative-text="First Page"
+                                        icon-name="utility:back"
+                                        disabled={canGoPrevPage}
+                                        onclick={goToFirstPage}>
+                                </lightning-button-icon>
+                                <lightning-button-icon
+                                        alternative-text="Prev Page"
+                                        icon-name="utility:chevronleft"
+                                        disabled={canGoPrevPage}
+                                        onclick={goToPrevPage}>
+                                </lightning-button-icon>
+                                <lightning-button
+                                        label={currentPageLabel}
+                                        disabled={currentPageLabel}
+                                        onclick={goToFirstPage}>
+                                </lightning-button>
+                                <lightning-button-icon
+                                        alternative-text="Next Page"
+                                        icon-name="utility:chevronright"
+                                        disabled={canGoNextPage}
+                                        onclick={goToNextPage}>
+                                </lightning-button-icon>
+                                <lightning-button-icon
+                                        alternative-text="Last Page"
+                                        icon-name="utility:forward"
+                                        disabled={canGoNextPage}
+                                        onclick={goToLastPage}>
+                                </lightning-button-icon>
+                            </lightning-button-group>
+                        </div>
+                        <lightning-combobox if:true={showPaginationPicker}
+                                            class="slds-float--right slds-m-right--small paginationPicker"
+                                            label=""
+                                            variant="label-hidden"
+                                            value={recordsPerPage}
+                                            options={recordsPerPageOptions}
+                                            onchange={pageRecordList}></lightning-combobox>
+                    </div>
+
+                </div>
+            </template>
+        </lightning-card>
+    </template>
+    <template if:true={showDeleteModal}>
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open" style="position: fixed">
+            <div class="slds-modal__container">
+                <!-- modal header start -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={toggleDeleteModal}>
+                        <lightning-icon icon-name="utility:close"
+                                        alternative-text="close"
+                                        variant="inverse"
+                                        size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Delete selected {title} ({selectedRows.length})</h2>
+                </header>
+                <!-- modal body start -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p class="detail slds-text-align--center">Are you sure you want to delete the selected {title}?</p>
+                </div>
+                <!-- modal footer start-->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                            class="slds-m-right_small"
+                            label="Cancel"
+                            onclick={toggleDeleteModal}>
+                    </lightning-button>
+                    <lightning-button
+                            variant="brand"
+                            label="Delete"
+                            onclick={handleDeleteRows}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" style="position: fixed"></div>
+    </template>
+    <br/>
+</template>

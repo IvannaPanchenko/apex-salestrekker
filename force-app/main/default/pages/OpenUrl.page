@@ -1,0 +1,21 @@
+<apex:page id="pg" controller="OpenUrl">
+<apex:form >
+
+<apex:actionFunction action="{!redirect}" name="OpenPage" reRender="pb,theIframe">
+    <apex:param assignTo="{!Page}" value="" name="param1"/>
+</apex:actionFunction>
+
+
+    <apex:pageBlock id="pb">
+
+        <apex:pageBlockButtons >
+            <apex:commandButton value="Google" onclick="OpenPage('google'); return false;"/>
+        </apex:pageBlockButtons>
+        
+        <apex:iframe id="theIframe" src="{!OpenPageURL}" scrolling="true"/>
+
+    </apex:pageBlock>
+
+
+</apex:form>
+</apex:page>

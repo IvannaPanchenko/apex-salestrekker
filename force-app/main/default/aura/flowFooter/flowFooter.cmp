@@ -1,0 +1,35 @@
+<!--
+ - Created by pablomartinez on 7/09/2019.
+ -->
+
+<aura:component access="global" implements="lightning:availableForFlowScreens">
+
+    <!-- Determine which actions are available -->
+    <aura:attribute name="canPause" type="Boolean" />
+    <aura:attribute name="labelPause" type="String" default="Pause" />
+    <aura:attribute name="canBack" type="Boolean" />
+    <aura:attribute name="labelBack" type="String" default="Previous" />
+    <aura:attribute name="canNext" type="Boolean" />
+    <aura:attribute name="labelNext" type="String" default="Next" />
+    <aura:attribute name="canFinish" type="Boolean" />
+    <aura:attribute name="labelFinish" type="String" default="Finish" />
+    <aura:attribute name="canSaveAndNew" type="Boolean" />
+    <aura:attribute name="labelSaveAndNew" type="String" default="Save &amp; New" />
+    <aura:attribute name="saveAndNew" type="Boolean" />
+
+    <c:flowFooterPlus
+        canPause="{!v.canPause}"
+        labelPause="{!v.labelPause}"
+        canBack="{!v.canBack}"
+        labelBack="{!v.labelBack}"
+        canNext="{!v.canNext}"
+        labelNext="{!v.labelNext}"
+        canFinish="{!v.canFinish}"
+        labelFinish="{!v.labelFinish}"
+        canSaveAndNew="{!v.canSaveAndNew}"
+        labelSaveAndNew="{!v.labelSaveAndNew}"
+        availableActions="{!v.availableActions}"
+        auraComponent="true"
+        onButtonPressed="{!c.handleButtonPressed}"
+    />
+</aura:component>

@@ -1,0 +1,66 @@
+.datatable-header {
+    border-bottom: 1px solid #dddbda;
+}
+
+.slds-table_bordered {
+    border-bottom: none;
+}
+
+.datatable-buttons {
+    border-top: 1px solid #dddbda;
+    z-index: 999;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.head-field {
+    background-color: #fafaf9;
+    color: #514f4d;
+    padding: .25rem .5rem;
+    font-weight: 700;
+    line-height: normal;
+    cursor: pointer;
+}
+
+.checkbox {
+    width: 40px;
+}
+
+.paginationPicker {
+    max-width: 100px;
+}
+
+.display-table-row {
+    display: table-row;
+}
+
+.slds-box {
+    overflow: auto;
+}
+
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+
+}
+
+/*table{
+    table-layout: fixed;
+}
+
+
+table thead {
+     display: table;
+    width: 100%;
+}
+
+table tbody {
+
+     display: block;
+    max-height: 375px; 
+    overflow: auto;
+
+}*/

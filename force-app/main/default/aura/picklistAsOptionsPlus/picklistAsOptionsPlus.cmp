@@ -1,0 +1,84 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName" access="global">
+
+    <!-- FLOW PROPERTIES -->
+    <aura:attribute name="showFlowButton" type="Boolean" default="false" />
+    <aura:attribute name="flowAPIName" type="String" />
+    <aura:attribute name="flowVariableValues" type="String" />
+    <aura:attribute name="flowButtonLabel" type="String" default="Open Flow" />
+    <aura:attribute name="flowButtonVariant" type="String" default="neutral" />
+
+    <!-- AURA PRIVATE PROPERTIES -->
+    <aura:attribute name="isOpen" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="flowError" type="Boolean" default="false" access="private"/>
+
+    <!-- CONGA BUTTON -->
+    <aura:attribute name="showCongaButton" type="Boolean" default="false" />
+    <aura:attribute name="congaButtonLabel" type="String"/>
+    <aura:attribute name="congaButtonVariant" default="neutral" type="String"/>
+    <aura:attribute name="congaTemplates" type="String"/>
+    <aura:attribute name="congaQueries" type="String"/>
+    <aura:attribute name="congaAttributes" type="String"/>
+
+    <!-- LWC ATTRIBUTES -->
+    <aura:attribute name="fieldNames" type="String" />
+    <aura:attribute name="sectionLabels" type="String"/>
+    <aura:attribute name="defaultChecked" type="String"/>
+    <aura:attribute name="saveEnabled" type="Boolean" default="true"/>
+    <aura:attribute name="saveButtonLabel" type="String" default="Save"/>
+    <aura:attribute name="saveButtonVariant" type="String" default="brand"/>
+    <aura:attribute name="resetEnabled" type="Boolean" default="true"/>
+    <aura:attribute name="allowSelectAll" type="Boolean" default="true"/>
+    <aura:attribute name="selectAllLabel" type="String" default="Select All?" />
+    <aura:attribute name="validateLastModifiedDate" type="Boolean" default="false"/>
+    <aura:attribute name="extraFieldName" type="String"/>
+    <aura:attribute name="extraFieldLabel" type="String"/>
+
+    <c:picklistsAsOptions aura:id="picklistsAsOptions"
+        recordId="{!v.recordId}"
+        objectApiName="{!v.sObjectName}"
+        fieldNames="{!v.fieldNames}"
+        sectionLabels="{!v.sectionLabels}"
+        defaultChecked="{!v.defaultChecked}"
+        saveEnabled="{!v.saveEnabled}"
+        saveButtonLabel="{!v.saveButtonLabel}"
+        saveButtonVariant="{!v.saveButtonVariant}"
+        resetEnabled="{!v.resetEnabled}"
+        allowSelectAll="{!v.allowSelectAll}"
+        selectAllLabel="{!v.selectAllLabel}"
+        validateLastModifiedDate="{!v.validateLastModifiedDate}"
+        extraFieldName="{!v.extraFieldName}"
+        extraFieldLabel="{!v.extraFieldLabel}"
+        onButtonPressed="{!c.handleButtonPressed}"
+        showFlowButton="{!v.showFlowButton}"
+        flowButtonLabel="{!v.flowButtonLabel}"
+        flowButtonVariant="{!v.flowButtonVariant}"
+        showCongaButton="{!v.showCongaButton}"
+        congaButtonLabel="{!v.congaButtonLabel}"
+        congaButtonVariant="{!v.congaButtonVariant}"
+        congaTemplates="{!v.congaTemplates}"
+        congaQueries="{!v.congaQueries}"
+        congaAttributes="{!v.congaAttributes}"
+    />
+
+    <aura:if isTrue="{!v.isOpen}">
+        <div>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open" style="position: fixed;">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header slds-modal__header_empty">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick="{!c.closeFlowModal}">
+                            <lightning:icon iconName="utility:close"
+                                            alternativeText="close"
+                                            variant="inverse"
+                                            size="small" />
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning:flow aura:id="callFlow" onstatuschange="{!c.statusChange}" />
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open" style="position: fixed;"></div>
+        </div>    
+    </aura:if>
+</aura:component>

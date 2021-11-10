@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>50.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Asset and Liability Picklist</masterLabel>
+    <targets>
+        <target>lightning__FlowScreen</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__FlowScreen">
+            <property name="objectName" label="Object API Name" type="String" required="true" role="inputOnly" />
+            <property name="accountId" label="Account Id" type="String" required="true" role="inputOnly" />
+            <property name="partnerId" label="Partner Id" type="String" required="true" role="inputOnly" />
+            <property name="label" label="Label" type="String" required="true" role="inputOnly"/>
+            <property name="required" label="Required" type="Boolean" default="false" required="false" role="inputOnly"/>
+            <property name="value" label="Value" type="String" role="outputOnly" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

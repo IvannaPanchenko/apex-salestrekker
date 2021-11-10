@@ -1,0 +1,118 @@
+.slds-vertical-tabs {
+    display: -ms-flexbox;
+    display: flex;
+    overflow: hidden;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem; }
+
+/**
+ * @summary Tab navigation container element
+ * @selector .slds-vertical-tabs__nav
+ * @restrict .slds-vertical-tabs > ul
+ */
+.slds-vertical-tabs__nav {
+    width: 12rem;
+    border-right: 1px solid #dddbda;
+    background: #f3f2f2; }
+
+/**
+ * @summary Tab navigation item
+ * @selector .slds-vertical-tabs__nav-item
+ * @restrict .slds-vertical-tabs__nav li
+ */
+.slds-vertical-tabs__nav-item {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    overflow: hidden;
+    border-bottom: 1px solid #dddbda;
+    color: #3e3e3c; }
+
+.slds-vertical-tabs__nav-item:last-child {
+    margin-bottom: -1px; }
+
+/**
+ * @summary Tab Navigation Link
+ * @selector .slds-vertical-tabs__link
+ * @restrict .slds-vertical-tabs__nav-item a
+ */
+.slds-vertical-tabs__link {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex: 1 1 0%;
+    flex: 1 1 0%;
+    -ms-flex-align: center;
+    align-items: center;
+    min-width: 0;
+    padding: 0.75rem;
+    color: currentColor; }
+
+.slds-vertical-tabs__link:hover {
+    background: #dddbda;
+    color: #080707;
+    text-decoration: none; }
+
+.slds-vertical-tabs__link:focus {
+    outline: 0; }
+
+/**
+ * @summary Left icon inside of vertical tabs nav item
+ * @selector .slds-vertical-tabs__left-icon
+ * @restrict .slds-vertical-tabs__nav-item span
+ */
+.slds-vertical-tabs__left-icon {
+    margin-right: 0.5rem; }
+
+.slds-vertical-tabs__left-icon:empty {
+    margin-right: 0; }
+
+/**
+ * @summary Right icon inside of vertical tabs nav item
+ * @selector .slds-vertical-tabs__right-icon
+ * @restrict .slds-vertical-tabs__nav-item span
+ */
+.slds-vertical-tabs__right-icon {
+    margin-left: auto; }
+
+/**
+ * @summary Tab Content Container
+ * @selector .slds-vertical-tabs__content
+ * @restrict .slds-vertical-tabs div
+ */
+.slds-vertical-tabs__content {
+    -ms-flex: 1;
+    flex: 1;
+    padding: 1rem;
+    background: white; }
+
+/**
+ * @name item-active
+ * @summary Active state for a tab navigation item
+ * @selector .slds-is-active
+ * @restrict .slds-vertical-tabs__nav-item
+ * @notes Required on the `<li>` element that is associated with the current active tab
+ * @modifier
+ * @group interactions
+ */
+.slds-vertical-tabs__nav-item.slds-is-active {
+    margin-right: -1px;
+    border-right: 0;
+    background: white;
+    color: #006dcc; }
+
+.slds-vertical-tabs__nav-item.slds-is-active .slds-vertical-tabs__link:hover {
+    background: white;
+    color: currentColor; }
+
+/**
+ * @name item-focus
+ * @summary Focus state for a tab navigation item
+ * @selector .slds-has-focus
+ * @restrict .slds-vertical-tabs__nav-item
+ * @modifier
+ * @group interactions
+ */
+.slds-vertical-tabs__nav-item.slds-has-focus {
+    text-decoration: underline;
+}

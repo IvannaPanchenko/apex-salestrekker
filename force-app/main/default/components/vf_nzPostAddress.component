@@ -1,0 +1,97 @@
+<apex:component id="vf_nzPostAddress" layout="none">
+
+    <apex:attribute name="containerId" type="String" required="true" description="The Id of the container" />
+    <apex:attribute name="recordId" type="String" required="true" description="The Id of the record" />
+    <apex:attribute name="objectApiName" type="String" required="true" description="The Api name of the object" />
+    
+    <apex:attribute name="showMap" type="Boolean" description="Show a static map of the address" default="true" required="true" />
+    <apex:attribute name="editEnabled" type="Boolean" description="Is the edition of the field enabled?" default="true" required="true" />
+    <apex:attribute name="editAlwaysEnabled" type="Boolean" description="Is the edition always enabled?" default="false" />
+    <apex:attribute name="internationalSearch" type="Boolean" description="Is the international search enabled?" default="false" />
+    <apex:attribute name="showAustraliaAsOption" description="Show Australia as another option? (Other Countries will also search in Australia but if you want an option to search only in Australia check this box)" type="Boolean" default="false" />
+    <apex:attribute name="showButtons" type="Boolean" description="Is the edition of the field enabled?" default="true" required="true" />
+    <apex:attribute name="qtyRecordsToShow" type="Integer" description="Quantity of records to show when searching." default="5" />
+    
+    <apex:attribute name="labelToShow" type="String" description="Label of the Main Field" required="true" />
+    
+    <apex:attribute name="streetFieldName" type="String" description="API name of the Street Field" required="true" />
+    <apex:attribute name="streetFieldValue" type="String" description="Field to set the Street value" />
+
+    <apex:attribute name="suburbFieldName" type="String" description="API name of the Suburb Field" required="true" />
+    <apex:attribute name="suburbFieldValue" type="String" description="Field to set the Suburb value" />
+
+    <apex:attribute name="cityFieldName" type="String" description="API name of the City Field" required="true" />
+    <apex:attribute name="cityFieldValue" type="String" description="Field to set the City value" />
+
+    <apex:attribute name="countryFieldName" type="String" description="API name of the Country Field" required="true" />
+    <apex:attribute name="countryFieldValue" type="String" description="Field to set the Country value" />
+
+    <apex:attribute name="postalCodeFieldName" type="String" description="API name of the Postal Code Field" required="true" />
+    <apex:attribute name="postalCodeFieldValue" type="String" description="Field to set the Postal Code value" />
+
+    <apex:attribute name="OnChange" description="Function to execute after setting the values" type="String"/>
+
+    <apex:attribute name="loadJQuery" description="Load JQuery library" type="Boolean" default="true"/>
+
+    <apex:includeLightning />
+
+    <apex:outputPanel rendered="{!loadJQuery}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    </apex:outputPanel>
+
+    <!-- HERE IS TO INCLUDE THE COMPONENT HTML -->
+    <span id="container-{!containerId}"></span>
+
+    <apex:inputHidden value="{!streetFieldValue}" html-data-id="set{!containerId}Street"/>
+    <apex:inputHidden value="{!suburbFieldValue}" html-data-id="set{!containerId}Suburb"/>
+    <apex:inputHidden value="{!cityFieldValue}" html-data-id="set{!containerId}City"/>
+    <apex:inputHidden value="{!countryFieldValue}" html-data-id="set{!containerId}Country"/>
+    <apex:inputHidden value="{!postalCodeFieldValue}" html-data-id="set{!containerId}PostalCode"/>
+
+    <!-- INITIALIZE THE LWC COMPONENT -->
+    <script>
+        $Lightning.use("c:aura_MainApp", function() {
+            $Lightning.createComponent(
+                "c:nzPostAddress",
+                {
+                    "recordId": "{!recordId}",
+                    "objectApiName": "{!objectApiName}",
+                    "showMap": {!showMap},
+                    "editEnabled": {!editEnabled},
+                    "editAlwaysEnabled": {!editAlwaysEnabled},
+                    "internationalSearch": {!internationalSearch},
+                    "labelToShow": "{!labelToShow}",
+                    "streetField": "{!streetFieldName}",
+                    "cityField": "{!cityFieldName}",
+                    "countryField": "{!countryFieldName}",
+                    "suburbField": "{!suburbFieldName}",
+                    "postalCodeField": "{!postalCodeFieldName}",
+                    "setValueToFields": (e) => setValueToFields{!containerId}(e),
+                    "showButtons": {!showButtons},
+                    "streetValue": "{!streetFieldValue}",
+                    "cityValue": "{!cityFieldValue}",
+                    "countryValue": "{!countryFieldValue}",
+                    "suburbValue": "{!suburbFieldValue}",
+                    "postalCodeValue": "{!postalCodeFieldValue}",
+                    "qtyRecordsToShow": {!qtyRecordsToShow},
+                    "showAustraliaAsOption": {!showAustraliaAsOption}
+                },
+                "container-{!containerId}",
+                function(cmp) {});
+        });
+
+        function setValueToFields{!containerId} (values) {
+            // set the value of the field for each field that comes through
+            if (values) {
+                for(let fl in values) {
+                    $('input[data-id*=set{!containerId}' + fl +']').val(values[fl]);
+                }
+            }
+
+            if ("{!OnChange}") {
+                eval("{!OnChange}");
+            }
+        }
+    </script>
+
+</apex:component>

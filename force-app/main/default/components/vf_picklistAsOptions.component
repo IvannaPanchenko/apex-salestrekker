@@ -1,0 +1,57 @@
+<apex:component id="vf_picklistAsOptions" layout="none">
+    <apex:attribute name="containerId" type="String" required="true" description="The Id of the container" />
+    <apex:attribute name="recordId" type="String" required="true" description="The Id of the record" />
+    <apex:attribute name="objectApiName" type="String" required="true" description="The API Name of the object" />
+    <apex:attribute name="fieldName" type="String" required="true" description="The Api name of the field to display" />
+    <apex:attribute name="sectionLabel" type="String" description="Label to display in the section" />
+    <apex:attribute name="defaultChecked" type="String" description="Default checked values for the field" />
+    <apex:attribute name="saveEnabled" type="Boolean" description="Are the save and cancel button visible?" default="true" />
+    <apex:attribute name="resetEnabled" type="Boolean" description="Are the reset button visible?" default="true" />
+    <apex:attribute name="allowSelectAll" type="Boolean" description="Is the reset button visible?" default="true" />
+    <apex:attribute name="setValueToField" type="String" description="Is the Select All visible?. (Only for multipickist fields)" />
+    <apex:attribute name="enforcePicklistDependencies" type="Boolean" description="Enforce settings for picklist dependencies" default="false" />
+    <apex:attribute name="validateLastModifiedDate" type="Boolean" description="Validate the record last modified date when saving?" default="false" />
+    <apex:attribute name="resetValues" type="Boolean" description="Variable to use for resetting all the checkboxes. Only client-side" default="false" />
+    <apex:attribute name="OnChange" description="Function to execute after setting the values" type="String"/>
+    <apex:attribute name="rendered" description="Used to show or hide the picklist" type="Boolean" default="true"/>
+
+    <apex:includeLightning />
+
+    <!-- VARIABLE TO SET THE VALUE OF THE FIELD -->
+    <apex:inputHidden value="{!setValueToField}" html-data-id="set{!containerId}Id"/>
+    
+    <!-- HERE IS TO INCLUDE THE COMPONENT HTML -->
+    <span id="container-{!containerId}"></span>
+
+    <!-- INITIALIZE THE LWC COMPONENT -->
+    <script>
+        if ("{!rendered}" === "true"){ 
+            $Lightning.use("c:aura_MainApp", function() {            
+                $Lightning.createComponent(
+                    "c:picklistsAsOptions",
+                    {
+                        "recordId": "{!recordId}",
+                        "objectApiName": "{!objectApiName}",
+                        "fieldNames": "{!fieldName}",
+                        "sectionLabels": "{!sectionLabel}",
+                        "defaultChecked": "{!defaultChecked}",
+                        "saveEnabled": {!saveEnabled},
+                        "resetEnabled": {!resetEnabled},
+                        "allowSelectAll": {!allowSelectAll},
+                        "validateLastModifiedDate": {!validateLastModifiedDate},
+                        "selectValueFnc": (e) => setValueToField{!containerId}(e),
+                        "resetValues": {!resetValues},
+                        "enforcePicklistDependencies": {!enforcePicklistDependencies}
+                    },
+                    "container-{!containerId}",
+                    function(cmp) {});
+            });
+        }
+
+        function setValueToField{!containerId} (e) {
+            $('input[data-id*=set{!containerId}Id]').val(e['{!fieldName}']);
+            eval("{!OnChange}");
+        }
+    </script>
+
+</apex:component>
