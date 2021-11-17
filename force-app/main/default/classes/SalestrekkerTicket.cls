@@ -18,18 +18,28 @@ public with sharing class SalestrekkerTicket {
         GraphQLNode node = new GraphQLNode('ticket')
                 .addArguments(new GraphQLArgument('id', ticketId))
                 .add(new Object[] { 'id', 'idOwner', 'isActive', 'timeStamp',
-                        'ref', 'uuid', 'idWorkflow', 'idStage', 'idClients', 'idLabels',
+                        'ref', 'uuid', 'idWorkflow', 'idStage', 'idClients', 'idLabels', 'name', 'description',
+                        new GraphQLNode('values')
+                        .add(new Object[]{ 'onceOff' }),
                         new GraphQLNode('ticketClientTypes')
                                 .add(new Object[]{ 'idContact', 'idLabel' }),
-                        'name', 'description',
-                        new GraphQLNode('values')
-                                .add(new Object[]{ 'onceOff' })
+                        new GraphQLNode('assets')
+                                .add(new Object[]{ 'id', 'name','isActive','value', 
+                                        new GraphQLNode('ownership')
+                                        .add(new Object[]{ 'idContact' }),
+                                        new GraphQLNode('assetType')
+                                        .add(new Object[]{ 'name' }),
+                                        new GraphQLNode('bankAccountType')
+                                        .add(new Object[]{ 'name' }),
+                                        new GraphQLNode('propertyType')
+                                        .add(new Object[]{ 'name' })})
+                      
                 });
 
         // create GraphQLQuery without Variables
         GraphQLQuery qry = new GraphQLQuery(node, null);
         String payload = JSON.serialize(qry);
-        System.debug('#################'+payload);
+        System.debug('################# queryTicketPayload'+payload);
         return payload;
     }
 
@@ -107,6 +117,7 @@ public with sharing class SalestrekkerTicket {
         public String description { get; set; }
         public Values values { get; set; }
         public TicketClientTypes[] ticketClientTypes { get; set; }
+        public AssetSalestrekker[] assets { get; set; }
         
     }
 
@@ -128,6 +139,7 @@ public with sharing class SalestrekkerTicket {
         public Long lostTimeStamp { get; set; }
         public Boolean isInProgress { get; set; }
         public String description { get; set; }
+        public AssetInput[] assets { get; set; }
     }
 
     public class TicketClientTypes {

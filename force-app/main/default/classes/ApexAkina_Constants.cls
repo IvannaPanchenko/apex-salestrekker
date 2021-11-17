@@ -76,5 +76,16 @@ public class ApexAkina_Constants {
     // Labels Type Names
 
     public static final String CLIENT = 'Client';
+    // Asset Status
+    public static final String EXISTING = 'Existing';
+    public static final String ASSET_VOID ='Void';
     
+    // Salestrekker SubType 
+    public static final String PROPERTY_TYPE = 'propertyType';
+    public static final String BANK_ACCOUNT_TYPE = 'bankAccountType';
+
+    //ST Stages
+    public static final String INITIAL_ENQUIRY = '1. Initial Enquiry';
+    public static final String INVITE_TO_CLIENT_PORTAL_CLIENT_DATA_UPLOAD = '2. Invite to Client Portal/Client Data U';
+    public static final String APPOINTMENT_MEETING = '3. Appointment/Meeting'; 
 }

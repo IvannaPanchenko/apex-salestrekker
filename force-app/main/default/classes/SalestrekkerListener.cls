@@ -55,13 +55,10 @@ global with sharing class SalestrekkerListener {
 
     @Future(Callout=true)
     public static void getSalestrekkerTicketDetails(String ticketId, String eventType) {
+        
         String ticketRequestBody = SalestrekkerTicket.queryTicketPayload(ticketId);
-        System.debug(ticketRequestBody);
         HttpResponse httpTicketResponse = SalestrekkerService.salestrekkerSend(ticketRequestBody);
         SalestrekkerTicket.TopTicket tTicket = (SalestrekkerTicket.TopTicket)JSON.deserialize(httpTicketResponse.getBody(), SalestrekkerTicket.TopTicket.class);
-
-        System.debug('########### stage id '+ tTicket.data.ticket.idStage);
-
         Salestrekker_Event2__e st2Event = new Salestrekker_Event2__e(Ticket_Id__c=ticketId, Event_Type__c=eventType,
                 Ticket_Id_Owner__c=tTicket.data.ticket.idOwner, Ticket_Id_WorkFlow__c=tTicket.data.ticket.idWorkflow,
                 Ticket_Id_Stage__c=tTicket.data.ticket.idStage, Ticket_Id_Client__c=tTicket.data.ticket.idClients[0],
@@ -72,6 +69,7 @@ global with sharing class SalestrekkerListener {
             String ids = string.join(tTicket.data.ticket.idLabels,',');
             st2Event.IdLabels__c = ids;     
         }
+
         if(String.isNotBlank(tTicket.data?.ticket?.idClients[0])) {
             String contactRequestBody = SalestrekkerContact.queryContactPayload(tTicket.data.ticket.idClients[0]);
             HttpResponse httpContactResponse = SalestrekkerService.salestrekkerSend(contactRequestBody);
@@ -83,16 +81,48 @@ global with sharing class SalestrekkerListener {
 
         }
 
-       eventList.add(st2Event);
+        eventList.add(st2Event);
 
         List<Database.SaveResult> results = EventBus.publish(eventList);
-
+        Boolean success= true;
         for(Database.SaveResult result: results){
-            if(!result.success){
 
+            
+            if(!result.success){
+                success = false;
                 System.debug('########### error '+ result.getErrors().get(0));
             }
-         }
+        }
+
+        if (success) {
+            // Update Assets, Liabilities etc in Salesforce
+            // If it is update deal from salestrekker we update the assets on Salesforce with they salestrakker id and contact Id 
+            if( ApexAkina_Constants.DEAL_CHANGE_STAGE.equalsIgnoreCase(eventType))
+            {
+                // Only update the asset if the ticket are in the following stages 1. Initial Enquiry, 2. Invite to Client Portal/Client Data Upload, 3. Appointment/Meeting
+                List<Salestrekker_Stage_Information__mdt> stagesInformation = [SELECT 	Salestrekker_Stage_Name__c, Salestrekker_Stage_Id__c, MasterLabel
+                                                                               FROM  Salestrekker_Stage_Information__mdt 
+                                                                               WHERE  Salestrekker_Stage_Id__c =: tTicket.data.ticket.idStage];
+
+                if (stagesInformation?.size() >0) {
+                    
+                    String label = stagesInformation.get(0).MasterLabel;
+
+                    if (ApexAkina_Constants.INITIAL_ENQUIRY.equalsIgnoreCase(label) ||
+                        ApexAkina_Constants.INVITE_TO_CLIENT_PORTAL_CLIENT_DATA_UPLOAD.equalsIgnoreCase(label) ||
+                        ApexAkina_Constants.APPOINTMENT_MEETING.equalsIgnoreCase(label)) {
+                        // Update Assets 
+                        if  ( tTicket.data?.ticket?.assets?.size()> 0 ) {  
+                            String clientId = String.valueOf(tTicket.data.ticket.idClients[0]);
+                            AssetServices.processAssetFromSalestrekker(tTicket.data.ticket.assets, ticketId, clientId );
+                        }
+                        
+                    }
+
+                }    
+             }     
+        }
+       
     }
 
 }
