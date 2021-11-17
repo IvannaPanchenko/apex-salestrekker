@@ -17,7 +17,7 @@ private class ChangeCategoryTest {
         );
 
         Id clientRecType = Schema.SObjectType.Account.getRecordTypeInfosByName().get('Client Account').getRecordTypeId();
-        Account newAcc = new Account(FirstName = 'Ivanna', LastName = 'Catindoy', RecordTypeId = clientRecType, Category__pc = 'D');
+        Account newAcc = new Account(FirstName = 'David', LastName = 'Catindoy', RecordTypeId = clientRecType, Category__pc = 'D');
         Database.insert(newAcc);
     }
 
