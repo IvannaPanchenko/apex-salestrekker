@@ -42,6 +42,7 @@ public without sharing class AssetServices {
                 assetInput.isActive = true;
                 assetInput.name = theAssetRole.Asset__r.Name;
                 assetInput.value = Integer.valueOf(theAssetRole.Asset__r.Value__c);
+                assetInput.bankBsb = theAssetRole.Asset__c;
                 
                 // create and add the ownership input to the assetInput
                 OwnershipInput ownership = new OwnershipInput();
@@ -79,7 +80,7 @@ public without sharing class AssetServices {
 
 
     // Return Asset that have asset in status existing by Id
-    public static List<Client_Asset__c> getExistingAssetsByNamesAndIds( Set<Id> assetsId, Set<String> assetNames){
+    public static List<Client_Asset__c> getExistingAssetsByIds( Set<Id> assetsId){
         List<Client_Asset__c> assetsToReturn = new List<Client_Asset__c>();
 
         // If assets id is not empty
@@ -89,8 +90,6 @@ public without sharing class AssetServices {
             assetsToReturn = [SELECT Id, Name, Value__c, Salestrekker_Contact_Id__c, Asset_Name__c, Salestrekker_Asset_Id__c, Status__c
                                  FROM Client_Asset__c 
                                  WHERE Id IN : assetsId
-                                 AND Salestrekker_Contact_Id__c = ''
-                                 AND Asset_Name__c IN: assetNames
                                  AND Status__c =: ApexAkina_Constants.EXISTING
                               ];
 
@@ -138,29 +137,27 @@ public without sharing class AssetServices {
                 List<Asset_Role__c> assetRoles = AssetServices.getExistingAssetsInformationByAccountId(accounts.get(0).Id);
                 if(assetRoles?.size() > 0){
                    //Add the assets to a set to be updated
-                   Set<Id> assetsId = new Set <Id>();
-                   Map<String, Id> assetNamesMap = new Map<String, Id>();
+                   Map<Id, Asset_Role__c> assetNamesMap = new Map<Id, Asset_Role__c>();
 
                    for(Asset_Role__c theRole: assetRoles){
-                        assetsId.add(theRole.Asset__c);
+                        if(!assetNamesMap.containsKey(theRole.Asset__c)){
 
-                        if(!assetNamesMap.containsKey(theRole.Asset__r.Name)){
-
-                            assetNamesMap.put( theRole.Asset__r.Name, theRole.Asset__c);
+                            assetNamesMap.put( theRole.Asset__c, theRole);
                         }
                    }
 
                    //retrieve assets from the SF database to be updated
-                   List<Client_Asset__c> existingAssets = AssetServices.getExistingAssetsByNamesAndIds(assetsId, assetNamesMap.keySet());
+                   List<Client_Asset__c> existingAssets = AssetServices.getExistingAssetsByIds(assetNamesMap.keySet());
                    // create a map to easy to work with
                    // key name so would be easy to compare witht the asset that is comming from ST
                    Map<String, Client_Asset__c> existingAssetsMap = new Map<String, Client_Asset__c>();
 
                    for(Client_Asset__c asset: existingAssets){
+                        // put either the salestrekker Id if it is not null or the asset Id
+                        String key = String.isNotBlank(asset.Salestrekker_Asset_Id__c)? asset.Salestrekker_Asset_Id__c : asset.Id;
 
-                        if(!existingAssetsMap.containsKey(asset.Name)){
-
-                            existingAssetsMap.put( asset.Name, asset);
+                        if(!existingAssetsMap.containsKey(key)){ 
+                            existingAssetsMap.put( key, asset);
                         }
                    }
 
@@ -175,21 +172,25 @@ public without sharing class AssetServices {
                    //add the assetCustom metadad in a map so we don't query in the for
                    for(Salestrekker_Asset_Mapping__mdt theAssetMapping: assetsMapping){
 
-                        // TODO @Rod here there is a map other from Salestrekker that how we know which is the rigth mapping in Salesforce
                         if(!assetSFSTmaps.containsKey(theAssetMapping.ST_Type__c)){
                             assetSFSTmaps.put(theAssetMapping.ST_Type__c,theAssetMapping );
                         }
-
                    }
 
                    // Look if the map has existing asset that we retrieve from the DB match with the ticket name
                    // in which case we will update then
                    // if the ticket name is not in the map retrieved we need to create that asset and the asset role
                    for(AssetSalestrekker theAssetST: assetsST){
-                        
-                        // If that asset name exist on SF database them we are going to update it
-                        if(existingAssetsMap.containsKey(theAssetST.name)){
-                            Client_Asset__c assetToUpdate = existingAssetsMap.get(theAssetST.name);
+                        String key = String.isNotBlank(theAssetST.bankBsb) && existingAssetsMap.containsKey(theAssetST.bankBsb)
+                                     ? theAssetST.bankBsb: theAssetST.id;
+                        System.debug('@@@@@@@@@@@@ theAssetST theAssetST.bankBsb '+ theAssetST.bankBsb);
+                        System.debug('@@@@@@@@@@@@ theAssetST theAssetST.id '+ theAssetST.id);
+                        System.debug('@@@@@@@@@@@@ theAssetST key '+ key);
+                        System.debug('@@@@@@@@@ existingAssetsMap KEYS '+ existingAssetsMap.keySet());
+                        // If that asset  bsbbank name exist on SF database them we are going to update it
+                        if( String.isNotBlank(key) && existingAssetsMap.containsKey(key)){
+                           
+                            Client_Asset__c assetToUpdate = existingAssetsMap.get(key);
                             
                             assetToUpdate.Value__c =  theAssetST.value;
                             assetToUpdate.Salestrekker_Asset_Id__c = theAssetST.id;
@@ -200,12 +201,15 @@ public without sharing class AssetServices {
                             }
 
                             assetsToBeUpdate.add(assetToUpdate);
-                        // we need to create that asset in SF    
-                        } else {
+                        // we need to create that asset in SF    // or has asset id 
+                        } else if (! existingAssetsMap.containsKey(key)) {
 
                             Client_Asset__c newAsset = new Client_Asset__c();
                             newAsset.Name = theAssetST.name;
                             newAsset.Value__c = theAssetST.value;
+                            newAsset.Status__c = theAssetST.isActive? ApexAkina_Constants.EXISTING : ApexAkina_Constants.ASSET_VOID;
+                            newAsset.Salestrekker_Asset_Id__c = theAssetST.id;
+                            newAsset.Salestrekker_Contact_Id__c = contactId;
                             
                             if( ! assetSFSTmaps.isEmpty() )   {
                                 String type = theAssetST?.assetType?.name.name() != null  ? assetSFSTmaps.get(theAssetST?.assetType?.name.name()).SF_Type__c:
@@ -214,9 +218,7 @@ public without sharing class AssetServices {
 
                                 newAsset.Type__c = type;
                             }
-                            newAsset.Status__c = theAssetST.isActive? ApexAkina_Constants.EXISTING : ApexAkina_Constants.ASSET_VOID;
-                            newAsset.Salestrekker_Asset_Id__c = theAssetST.id;
-                            newAsset.Salestrekker_Contact_Id__c = contactId;
+                       
 
                             assetsToBeCreated.add(newAsset);
                             
@@ -311,131 +313,41 @@ public without sharing class AssetServices {
 
     // The following methods return the right enum by the name from the custom mapping
     public static AssetTypeEnumerator getAssetTypeEnumByName ( String name ){
-
-        switch on name {
-            when 'owner_occupier_property_address' {
-                return AssetTypeEnumerator.owner_occupier_property_address;
-            }
-            when 'investment_property_address' {
-                return AssetTypeEnumerator.investment_property_address;
-            }
-            when 'vehicle_make_and_model' {
-                return AssetTypeEnumerator.vehicle_make_and_model;
-            }
-            when 'bank_accounts' {
-                return AssetTypeEnumerator.bank_accounts;
-            }
-            when 'kiwisaver' {
-                return AssetTypeEnumerator.kiwisaver;
-            }
-            when 'home_contents' {
-                return AssetTypeEnumerator.home_contents;
-            }
-            when 'superfund_institution' {
-                return AssetTypeEnumerator.superfund_institution;
-            }
-            when 'shares' {
-                return AssetTypeEnumerator.shares;
-            }
-            when 'other' {
-                return AssetTypeEnumerator.other;
-            }
-            when 'balance_sheet' {
-                return AssetTypeEnumerator.balance_sheet;
-            }
-            when else {
-                // default asset Type
-                return AssetTypeEnumerator.kiwisaver;
+        AssetTypeEnumerator assetTypeEnum;
+        for (AssetTypeEnumerator assetEnum: AssetTypeEnumerator.values()) {
+            if (assetEnum.name() == name) {
+                assetTypeEnum = assetEnum;
+                break;
             }
         }
+        return assetTypeEnum != null? assetTypeEnum : AssetTypeEnumerator.other;
     }
 
 
     // The following methods return the right enum by the name from the custom mapping
     public static BankAccountTypeEnumerator getBankAccountTypeEnumeratorByName ( String name ){
-        switch on name {
-            when 'none' {
-                return BankAccountTypeEnumerator.none;
-            }
-            when 'savings_account' {
-                return BankAccountTypeEnumerator.savings_account;
-            }
-            when 'transaction_account' {
-                return BankAccountTypeEnumerator.transaction_account;
-            }
-            when 'cheque_account' {
-                return BankAccountTypeEnumerator.cheque_account;
-            }
-            when 'other_account' {
-                return BankAccountTypeEnumerator.other_account;
-            }
-            when else {
-                // default asset Type
-                return BankAccountTypeEnumerator.none;
+        BankAccountTypeEnumerator bankAccountTypeEnum;
+        for (BankAccountTypeEnumerator banckEnum: BankAccountTypeEnumerator.values()) {
+            if (banckEnum.name() == name) {
+                bankAccountTypeEnum = banckEnum;
+                break;
             }
         }
+        return bankAccountTypeEnum != null? bankAccountTypeEnum : BankAccountTypeEnumerator.none;
     }
 
 
      // The following methods return the right enum by the name from the custom mapping
      public static PropertyTypeEnumerator getPropertyTypeEnumeratorByName ( String name ){
-        switch on name {
-            when 'none' {
-                return PropertyTypeEnumerator.none;
-            }
-            when 'apartment_unit_flat' {
-                return PropertyTypeEnumerator.apartment_unit_flat;
-            }
-            when 'company_title_unit' {
-                return PropertyTypeEnumerator.company_title_unit;
-            }
-            when 'duplex' {
-                return PropertyTypeEnumerator.duplex;
-            }
-            when 'fully_detached_house' {
-                return PropertyTypeEnumerator.fully_detached_house;
-            }
-            when 'holiday_home' {
-                return PropertyTypeEnumerator.holiday_home;
-            }
-            when 'holiday_rental' {
-                return PropertyTypeEnumerator.holiday_rental;
-            }
-            when 'house_and_land' {
-                return PropertyTypeEnumerator.house_and_land;
-            }
-            when 'licensed_builder_construction' {
-                return PropertyTypeEnumerator.licensed_builder_construction;
-            }
-            when 'owner_builder_construction' {
-                return PropertyTypeEnumerator.owner_builder_construction;
-            }
-            when 'semi_detached_house' {
-                return PropertyTypeEnumerator.semi_detached_house;
-            }
-            when 'serviced_apartment' {
-                return PropertyTypeEnumerator.serviced_apartment;
-            }
-            when 'strata_title_unit' {
-                return PropertyTypeEnumerator.strata_title_unit;
-            }
-            when 'single_bedroom_less_than_fifty_sqm' {
-                return PropertyTypeEnumerator.single_bedroom_less_than_fifty_sqm;
-            }
-            when 'townhouse' {
-                return PropertyTypeEnumerator.townhouse;
-            }
-            when 'vacant_land' {
-                return PropertyTypeEnumerator.vacant_land;
-            }
-            when 'villa' {
-                return PropertyTypeEnumerator.villa;
-            }
-            when else {
-                // default asset Type
-                return PropertyTypeEnumerator.none;
+        PropertyTypeEnumerator propertyTypeEnum;
+        for (PropertyTypeEnumerator propertyEnum: PropertyTypeEnumerator.values()) {
+            if (propertyEnum.name() == name) {
+                propertyTypeEnum = propertyEnum;
+                break;
             }
         }
+        return propertyTypeEnum != null? propertyTypeEnum : PropertyTypeEnumerator.none;
+    
     }
 
 

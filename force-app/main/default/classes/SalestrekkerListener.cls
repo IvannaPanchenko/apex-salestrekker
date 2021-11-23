@@ -55,7 +55,6 @@ global with sharing class SalestrekkerListener {
 
     @Future(Callout=true)
     public static void getSalestrekkerTicketDetails(String ticketId, String eventType) {
-        
         String ticketRequestBody = SalestrekkerTicket.queryTicketPayload(ticketId);
         HttpResponse httpTicketResponse = SalestrekkerService.salestrekkerSend(ticketRequestBody);
         SalestrekkerTicket.TopTicket tTicket = (SalestrekkerTicket.TopTicket)JSON.deserialize(httpTicketResponse.getBody(), SalestrekkerTicket.TopTicket.class);
@@ -93,7 +92,7 @@ global with sharing class SalestrekkerListener {
                 System.debug('########### error '+ result.getErrors().get(0));
             }
         }
-
+        System.debug('########### success ');
         if (success) {
             // Update Assets, Liabilities etc in Salesforce
             // If it is update deal from salestrekker we update the assets on Salesforce with they salestrakker id and contact Id 
@@ -107,7 +106,6 @@ global with sharing class SalestrekkerListener {
                 if (stagesInformation?.size() >0) {
                     
                     String label = stagesInformation.get(0).MasterLabel;
-
                     if (ApexAkina_Constants.INITIAL_ENQUIRY.equalsIgnoreCase(label) ||
                         ApexAkina_Constants.INVITE_TO_CLIENT_PORTAL_CLIENT_DATA_UPLOAD.equalsIgnoreCase(label) ||
                         ApexAkina_Constants.APPOINTMENT_MEETING.equalsIgnoreCase(label)) {
@@ -115,6 +113,14 @@ global with sharing class SalestrekkerListener {
                         if  ( tTicket.data?.ticket?.assets?.size()> 0 ) {  
                             String clientId = String.valueOf(tTicket.data.ticket.idClients[0]);
                             AssetServices.processAssetFromSalestrekker(tTicket.data.ticket.assets, ticketId, clientId );
+                        }
+
+                        // Update Liabilities 
+                        if  ( tTicket.data?.ticket?.liabilities?.size()> 0 ) {
+                      
+                            String clientId = String.valueOf(tTicket.data.ticket.idClients[0]);
+                            System.debug('##### Create liabilities 1 clientId Id ' + clientId); 
+                            LiabilityServices.processLiabilitiesFromSalestrekker(tTicket.data.ticket.liabilities, ticketId, clientId );
                         }
                         
                     }

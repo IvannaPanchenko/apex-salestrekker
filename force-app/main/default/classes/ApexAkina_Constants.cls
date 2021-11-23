@@ -88,4 +88,11 @@ public class ApexAkina_Constants {
     public static final String INITIAL_ENQUIRY = '1. Initial Enquiry';
     public static final String INVITE_TO_CLIENT_PORTAL_CLIENT_DATA_UPLOAD = '2. Invite to Client Portal/Client Data U';
     public static final String APPOINTMENT_MEETING = '3. Appointment/Meeting'; 
+
+    // Liabity mapping 
+
+    public static final String MORTGAGE_LOAN = 'mortgage_loan'; 
+    public static final String MORTGAGE_LOAN_INVESTMENT = 'mortgage_loan_investment'; 
+    public static final String MORTGAGE_LOAN_PRIMARY_RESIDENCE = 'mortgage_loan_primary_residence'; 
+    public static final String 	OTHER_LOANS = 'other';
 }

@@ -24,7 +24,7 @@ public with sharing class SalestrekkerTicket {
                         new GraphQLNode('ticketClientTypes')
                                 .add(new Object[]{ 'idContact', 'idLabel' }),
                         new GraphQLNode('assets')
-                                .add(new Object[]{ 'id', 'name','isActive','value', 
+                                .add(new Object[]{ 'id', 'name','isActive','value', 'bankBsb',
                                         new GraphQLNode('ownership')
                                         .add(new Object[]{ 'idContact' }),
                                         new GraphQLNode('assetType')
@@ -32,7 +32,14 @@ public with sharing class SalestrekkerTicket {
                                         new GraphQLNode('bankAccountType')
                                         .add(new Object[]{ 'name' }),
                                         new GraphQLNode('propertyType')
-                                        .add(new Object[]{ 'name' })})
+                                        .add(new Object[]{ 'name' })}),
+                        new GraphQLNode('liabilities')
+                                        .add(new Object[]{ 'id', 'name','mortgageType','lenderOtherName',
+                                        'balance', 'isActive','fixedExpiryDate','endDate',
+                                        new GraphQLNode('ownership')
+                                        .add(new Object[]{ 'idContact' }),
+                                        new GraphQLNode('liabilityType')
+                                        .add(new Object[]{ 'name' })})                
                       
                 });
 
@@ -59,7 +66,7 @@ public with sharing class SalestrekkerTicket {
         //Create GraphQLQuery with Variables
         GraphQLQuery qry = new GraphQLQuery(node, ticketDetails);
         String payload = JSON.serialize(qry);
-        System.debug(payload);
+        System.debug('########### createTicketPayload' +  payload);
         return payload;
     }
 
@@ -118,6 +125,7 @@ public with sharing class SalestrekkerTicket {
         public Values values { get; set; }
         public TicketClientTypes[] ticketClientTypes { get; set; }
         public AssetSalestrekker[] assets { get; set; }
+        public LiabilitySalestrekker[] liabilities { get; set; }
         
     }
 
@@ -140,6 +148,7 @@ public with sharing class SalestrekkerTicket {
         public Boolean isInProgress { get; set; }
         public String description { get; set; }
         public AssetInput[] assets { get; set; }
+        public LiabilityInput[] liabilities { get; set; }
     }
 
     public class TicketClientTypes {

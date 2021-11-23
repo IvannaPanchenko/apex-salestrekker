@@ -1,7 +1,7 @@
 /*************************************************************************************************************
- * @name      AssetInput
+ * @name      LiabilityInput
  * @author      Ivanna Panchenko <ivanna@beIntelligent.nz>
- * @created      5 November 2021
+ * @created      18 November 2021
  * @description    Salestrekker Wrapper Class
  * @testClass      N/A
  *
@@ -9,16 +9,18 @@
  * -----------------------------------------------------------------------------------------------------------
  *         No.    Date      Author          Description
  *         ----  ------------  --------------------  ----------------------------------------------
- * @version    1.0    2021-11-05      Ivanna Panchenko      Creation of the class
+ * @version    1.0    2021-11-18      Ivanna Panchenko      Creation of the class
  *
 **************************************************************************************************************/
-public with sharing class AssetInput {
-    public AssetTypeInput assetType { get; set; }
-    public BankAccountTypeInput bankAccountType { get; set; }
-    public PropertyTypeInput propertyType { get; set; }
+public with sharing class LiabilityInput {
+    public LiabilityTypeInput liabilityType { get; set; }
+    public Boolean mortgageType { get; set; }
     public Boolean isActive { get; set; }
     public String name { get; set; }
-    public Integer value { get; set; }
-    public String bankBsb { get; set; } // will represent the SF assets ids
+    public String lenderOtherName { get; set; } // salesforce Liability Id
+    public Integer balance { get; set; }
     public OwnershipInput ownership { get; set; }
+    public Long fixedExpiryDate { get; set; }
+    public Long endDate { get; set; }
 }
+
