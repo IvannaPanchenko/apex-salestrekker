@@ -7,6 +7,8 @@ public with sharing class SalestrekkerCreateContact {
     public static String createContact(String idOwner, Account myAccount) {
         //Todo - find usages
         String stContactId;
+        
+        
 
         SalestrekkerContact.CreateContact createContact = new SalestrekkerContact.CreateContact();
         createContact.contact = new SalestrekkerContact.ContactInput();

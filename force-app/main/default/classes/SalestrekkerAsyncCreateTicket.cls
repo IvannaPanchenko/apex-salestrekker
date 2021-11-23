@@ -42,6 +42,8 @@ public without sharing class SalestrekkerAsyncCreateTicket implements Queueable,
         createTicket.ticket.description = myOpportunity.Description;
         createTicket.ticket.values = new SalestrekkerTicket.Values();
         createTicket.ticket.values.onceOff = myOpportunity.Amount != null ? myOpportunity.Amount : 0;
+        createTicket.ticket.assets = AssetServices.getSalestrekkerAssetInputByAccountId(myAccount.Id, myAccount.Salestrekker_Contact_Id__c);
+        createTicket.ticket.liabilities = LiabilityServices.getSalestrekkerLiabilityInputByAccountId(myAccount.Id, myAccount.Salestrekker_Contact_Id__c);
 
         String ticketRequestBody = SalestrekkerTicket.createTicketPayload(createTicket);
 
@@ -104,4 +106,5 @@ public without sharing class SalestrekkerAsyncCreateTicket implements Queueable,
         }
         Database.update(updateList);
     }
+
 }

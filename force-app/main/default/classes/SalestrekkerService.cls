@@ -85,11 +85,7 @@ public without sharing class SalestrekkerService {
         HttpResponse httpResponse = doSend(requestBody);
 
         response = (tokenClassResponse) System.JSON.deserialize(httpResponse.getBody(), tokenClassResponse.class);
-        
-        System.debug('########### RESPONSE'+ response);
-        System.debug('########### data'+ response?.data);
-        System.debug('########### authenticate'+ response?.data?.authenticate);
-        System.debug('########### token'+ response?.data?.authenticate?.token);
+
         token = response?.data?.authenticate?.token;
         Cache.Org.put('local.salestrekker.token', token, 3600);
         return httpResponse;
